@@ -72,8 +72,7 @@ const Login: React.FC = () => {
                         display: 'flex',
                         flexDirection: { xs: 'column', md: 'row' },
                         borderRadius: 18,
-                        border: '8px solid #fff',
-                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                        boxShadow: '0 0 0 8px #fff inset, 0 8px 32px 0 rgba(31,38,135,0.15)',
                         maxWidth: 1100,
                         width: '100%',
                         minHeight: { xs: 'auto', md: 700 },
@@ -277,7 +276,7 @@ const Login: React.FC = () => {
                                 <Box sx={{ textAlign: 'center' }}>
                                     <Typography variant="body2" sx={{ color: '#888' }}>
                                         Don&apos;t have an account?{' '}
-                                        <Link href="/register" variant="body2" sx={{ fontWeight: 600, color: '#111' }}>
+                                        <Link href="/register" variant="body2" sx={{ fontWeight: 600, color: '#111', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
                                             Sign Up
                                         </Link>
                                     </Typography>
