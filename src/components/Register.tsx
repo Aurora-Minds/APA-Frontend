@@ -23,7 +23,7 @@ const Register: React.FC = () => {
         e.preventDefault();
         try {
             await register(name, email, password);
-            navigate('/dashboard');
+            navigate('/login');
         } catch (err: any) {
             setError(err.response?.data?.msg || 'An error occurred');
         }
