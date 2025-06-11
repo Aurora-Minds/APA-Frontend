@@ -113,18 +113,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const register = async (name: string, email: string, password: string) => {
         try {
-            const res = await axios.post<AuthResponse>('http://localhost:5001/api/auth/register', {
+            await axios.post<AuthResponse>('http://localhost:5001/api/auth/register', {
                 name,
                 email,
                 password
             });
-            const token = res.data.token;
-            localStorage.setItem('token', token);
-            axios.defaults.headers.common['x-auth-token'] = token;
-            setToken(token);
-            setIsAuthenticated(true);
-            const userRes = await axios.get<UserResponse>('http://localhost:5001/api/users/me');
-            setUser(userRes.data as User);
+            // Do not set token, user, or isAuthenticated here
         } catch (err) {
             throw err;
         }
