@@ -21,6 +21,12 @@ jobs:
             username: ${{ secrets.REGISTRY_USERNAME }}
             password: ${{ secrets.REGISTRY_PASSWORD }}
         - run: |
-            docker build . --build-arg REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }} -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/apa-webapp:latest
+            docker build . \
+              --build-arg REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }} \
+              --build-arg REACT_APP_PORT=${{ secrets.REACT_APP_PORT }} \
+              --build-arg REACT_APP_INACTIVITY_TIMEOUT=${{ secrets.REACT_APP_INACTIVITY_TIMEOUT }} \
+              --build-arg REACT_APP_PRIMARY_COLOR=${{ secrets.REACT_APP_PRIMARY_COLOR }} \
+              --build-arg REACT_APP_SECONDARY_COLOR=${{ secrets.REACT_APP_SECONDARY_COLOR }} \
+              -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/apa-webapp:latest
             docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/apa-webapp:latest
             
