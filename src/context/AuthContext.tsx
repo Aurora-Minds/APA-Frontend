@@ -1,17 +1,11 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    theme?: 'light' | 'dark' | 'system';
-}
+import { User, UserResponse } from '../types';
 
 interface AuthContextType {
     user: User | null;
     token: string | null;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
     register: (name: string, email: string, password: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
@@ -20,26 +14,23 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const INACTIVITY_LIMIT = parseInt(process.env.REACT_APP_INACTIVITY_TIMEOUT || '900000'); // 15 minutes in ms by default
-
 interface AuthResponse {
     token: string;
 }
 
-interface UserResponse {
-    id: string;
-    name: string;
-    email: string;
-    theme?: 'light' | 'dark' | 'system';
-}
+export const useAuth = () => {
+    const context = React.useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [inactivityMessage, setInactivityMessage] = useState<string | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
-    let inactivityTimeout: NodeJS.Timeout | null = null;
 
     // Session persistence and fetch user info on mount or token change
     useEffect(() => {
@@ -47,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem('token', token);
             axios.defaults.headers.common['x-auth-token'] = token;
 
-            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'; // Fallback for developmen
+            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
             axios.get<UserResponse>(`${API_BASE_URL}/users/me`)
                 .then(res => {
                     setUser(res.data as User);
@@ -70,37 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [token]);
 
-    // Inactivity timer
-    useEffect(() => {
-        if (!isAuthenticated) return;
-        const resetTimer = () => {
-            if (inactivityTimeout) clearTimeout(inactivityTimeout);
-            inactivityTimeout = setTimeout(() => {
-                setInactivityMessage('You have been logged out due to inactivity.');
-                logout();
-            }, INACTIVITY_LIMIT);
-        };
-        // Listen to user activity
-        window.addEventListener('mousemove', resetTimer);
-        window.addEventListener('keydown', resetTimer);
-        window.addEventListener('mousedown', resetTimer);
-        window.addEventListener('touchstart', resetTimer);
-        resetTimer();
-        return () => {
-            if (inactivityTimeout) clearTimeout(inactivityTimeout);
-            window.removeEventListener('mousemove', resetTimer);
-            window.removeEventListener('keydown', resetTimer);
-            window.removeEventListener('mousedown', resetTimer);
-            window.removeEventListener('touchstart', resetTimer);
-        };
-    }, [isAuthenticated]);
-
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, rememberMe: boolean) => {
         try {
             const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
             const res = await axios.post<AuthResponse>(`${API_BASE_URL}/auth/login`, {
                 email,
-                password
+                password,
+                rememberMe
             });
             const token = res.data.token;
             localStorage.setItem('token', token);
@@ -143,20 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return (
         <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated, setTheme }}>
-            {inactivityMessage && (
-                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', background: '#ffecb3', color: '#333', textAlign: 'center', zIndex: 2000, padding: 8 }}>
-                    {inactivityMessage}
-                </div>
-            )}
             {!authLoading && children}
         </AuthContext.Provider>
     );
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
 }; 

@@ -30,7 +30,7 @@ const Login: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await login(email, password);
+            await login(email, password, rememberMe);
             navigate('/dashboard');
         } catch (err: any) {
             setError(err.response?.data?.msg || 'An error occurred');
