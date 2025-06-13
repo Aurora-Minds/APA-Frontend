@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Paper, Typography, Box, Checkbox, IconButton, CircularProgress } from '@mui/material';
+import { Paper, Typography, Box, Checkbox, IconButton, CircularProgress, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '@mui/material/styles';
 import DateTimePickerMenu from './DateTimePickerMenu';
 import PriorityMenu, { Priority, PriorityMenuButton } from './PriorityMenu';
-import { MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import Chip from '@mui/material/Chip';
 
 interface Task {
@@ -19,17 +18,15 @@ interface Task {
     subject: string;
 }
 
-// Helper to get checkbox color by priority
 const getCheckboxColor = (priority: string) => {
     switch (priority) {
-        case 'high': return '#e57373'; // red
-        case 'medium': return '#ffd54f'; // yellow
-        case 'low': return '#64b5f6'; // blue
-        default: return '#bdbdbd'; // grey
+        case 'high': return '#e57373';
+        case 'medium': return '#ffd54f';
+        case 'low': return '#64b5f6';
+        default: return '#bdbdbd';
     }
 };
 
-// Add helper functions from Dashboard
 const getTaskTime = (dueDate: string) => {
     if (!dueDate) return '';
     const date = new Date(dueDate);
@@ -41,7 +38,6 @@ const getTaskDate = (dueDate: string) => {
     if (!dueDate) return '';
     const due = new Date(dueDate);
     if (isNaN(due.getTime())) return '';
-    // Use UTC for date comparison
     const todayLocal = new Date();
     todayLocal.setUTCHours(0, 0, 0, 0);
     const tomorrowUtc = new Date(todayLocal);
@@ -51,7 +47,6 @@ const getTaskDate = (dueDate: string) => {
     return due.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-// Add subject color map for chips
 const subjectColors: Record<string, string> = {
     English: '#1976d2',
     Math: '#43a047',
@@ -74,6 +69,8 @@ const AllTasks: React.FC = () => {
     const [subjectLoading, setSubjectLoading] = useState(false);
     const [subjectError, setSubjectError] = useState('');
 
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+
     useEffect(() => {
         fetchTasks();
         fetchSubjects();
@@ -81,7 +78,7 @@ const AllTasks: React.FC = () => {
 
     const fetchTasks = async () => {
         try {
-            const res = await axios.get<Task[]>('http://localhost:5001/api/tasks');
+            const res = await axios.get<Task[]>(`${API_BASE_URL}/tasks`);
             setTasks(res.data);
         } catch (err) {
             console.error('Error fetching tasks:', err);
@@ -91,7 +88,7 @@ const AllTasks: React.FC = () => {
     const fetchSubjects = async () => {
         try {
             setSubjectLoading(true);
-            const res = await axios.get('http://localhost:5001/api/users/me/subjects');
+            const res = await axios.get(`${API_BASE_URL}/users/me/subjects`);
             setSubjects((res.data as { subjects: string[] }).subjects || []);
         } catch (err) {
             setSubjectError('Failed to load subjects');
@@ -103,7 +100,7 @@ const AllTasks: React.FC = () => {
     const handleDelete = async (id: string) => {
         setDeletingId(id);
         try {
-            await axios.delete(`http://localhost:5001/api/tasks/${id}`);
+            await axios.delete(`${API_BASE_URL}/tasks/${id}`);
             fetchTasks();
         } catch (err) {
             console.error('Error deleting task:', err);
@@ -114,7 +111,10 @@ const AllTasks: React.FC = () => {
 
     const handleComplete = async (task: Task) => {
         try {
-            await axios.put(`http://localhost:5001/api/tasks/${task._id}`, { ...task, status: task.status === 'completed' ? 'pending' : 'completed' });
+            await axios.put(`${API_BASE_URL}/tasks/${task._id}`, {
+                ...task,
+                status: task.status === 'completed' ? 'pending' : 'completed',
+            });
             fetchTasks();
         } catch (err) {
             console.error('Error updating task:', err);
@@ -129,7 +129,7 @@ const AllTasks: React.FC = () => {
             dueDate: task.dueDate,
             priority: task.priority,
             status: task.status,
-            subject: task.subject
+            subject: task.subject,
         });
         setEditDialogOpen(true);
     };
@@ -146,7 +146,7 @@ const AllTasks: React.FC = () => {
     const handleEditSave = async () => {
         if (!editTask) return;
         try {
-            await axios.put(`http://localhost:5001/api/tasks/${editTask._id}`, editForm);
+            await axios.put(`${API_BASE_URL}/tasks/${editTask._id}`, editForm);
             fetchTasks();
             closeEditDialog();
         } catch (err) {
@@ -158,7 +158,7 @@ const AllTasks: React.FC = () => {
         if (!newSubject.trim()) return;
         try {
             setSubjectLoading(true);
-            const res = await axios.post('http://localhost:5001/api/users/me/subjects', { subject: newSubject.trim() });
+            const res = await axios.post(`${API_BASE_URL}/users/me/subjects`, { subject: newSubject.trim() });
             setSubjects((res.data as { subjects: string[] }).subjects);
             setNewSubject('');
             setSubjectError('');
@@ -172,7 +172,7 @@ const AllTasks: React.FC = () => {
     const handleDeleteSubject = async (subject: string) => {
         try {
             setSubjectLoading(true);
-            const res = await axios.delete(`http://localhost:5001/api/users/me/subjects/${encodeURIComponent(subject)}`);
+            const res = await axios.delete(`${API_BASE_URL}/users/me/subjects/${encodeURIComponent(subject)}`);
             setSubjects((res.data as { subjects: string[] }).subjects);
             setSubjectError('');
         } catch (err: any) {
@@ -190,6 +190,7 @@ const AllTasks: React.FC = () => {
     return (
         <Box sx={{ p: 4 }}>
             <Typography variant="h4" sx={{ mb: 3, fontWeight: 700 }}>All Tasks</Typography>
+
             <Typography variant="h6" sx={{ mb: 1 }}>Not Completed</Typography>
             <Paper sx={{ p: 2, mb: 3, borderRadius: 3, boxShadow: 1, background: 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: '#111' }}>
                 {notCompleted.length === 0 ? (
@@ -197,18 +198,8 @@ const AllTasks: React.FC = () => {
                 ) : (
                     notCompleted.map(task => (
                         <Box key={task._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, p: 1, borderRadius: 2, '&:hover': { bgcolor: '#f0f4fa' } }}>
-                            <Chip
-                                label={task.subject || 'No Subject'}
-                                size="small"
-                                sx={{
-                                    bgcolor: subjectColors[task.subject] || subjectColors.Default,
-                                    color: '#fff',
-                                    fontWeight: 700,
-                                    mr: 1,
-                                    minWidth: 70,
-                                    borderRadius: 1,
-                                }}
-                            />
+                            <Chip label={task.subject || 'No Subject'} size="small"
+                                sx={{ bgcolor: subjectColors[task.subject] || subjectColors.Default, color: '#fff', fontWeight: 700, mr: 1, minWidth: 70, borderRadius: 1 }} />
                             <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority) }} />
                             <Box sx={{ flexGrow: 1 }}>
                                 <Typography sx={{ fontWeight: 500 }}>{task.title}</Typography>
@@ -222,6 +213,7 @@ const AllTasks: React.FC = () => {
                     ))
                 )}
             </Paper>
+
             <Typography variant="h6" sx={{ mb: 1 }}>Completed</Typography>
             <Paper sx={{ p: 2, borderRadius: 3, boxShadow: 1, background: 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: '#111' }}>
                 {completed.length === 0 ? (
@@ -229,18 +221,8 @@ const AllTasks: React.FC = () => {
                 ) : (
                     completed.map(task => (
                         <Box key={task._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, p: 1, borderRadius: 2, '&:hover': { bgcolor: '#f0f4fa' } }}>
-                            <Chip
-                                label={task.subject || 'No Subject'}
-                                size="small"
-                                sx={{
-                                    bgcolor: subjectColors[task.subject] || subjectColors.Default,
-                                    color: '#fff',
-                                    fontWeight: 700,
-                                    mr: 1,
-                                    minWidth: 70,
-                                    borderRadius: 1,
-                                }}
-                            />
+                            <Chip label={task.subject || 'No Subject'} size="small"
+                                sx={{ bgcolor: subjectColors[task.subject] || subjectColors.Default, color: '#fff', fontWeight: 700, mr: 1, minWidth: 70, borderRadius: 1 }} />
                             <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority) }} />
                             <Box sx={{ flexGrow: 1 }}>
                                 <Typography sx={{ fontWeight: 500, textDecoration: 'line-through' }}>{task.title}</Typography>
@@ -254,76 +236,27 @@ const AllTasks: React.FC = () => {
                     ))
                 )}
             </Paper>
+
             <Dialog open={editDialogOpen} onClose={closeEditDialog} maxWidth="sm" fullWidth>
                 <DialogTitle>Edit Task</DialogTitle>
                 <DialogContent sx={{ pb: 0 }}>
-                    <TextField
-                        margin="dense"
-                        label="Title"
-                        name="title"
-                        value={editForm.title}
-                        onChange={handleEditChange}
-                        fullWidth
-                    />
+                    <TextField margin="dense" label="Title" name="title" value={editForm.title} onChange={handleEditChange} fullWidth />
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="subtitle2" sx={{ mb: 1 }}>Subjects</Typography>
                         {subjects.map(subj => (
                             <Box key={subj} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <MenuItem onClick={() => setEditForm(f => ({ ...f, subject: subj }))} selected={editForm.subject === subj} sx={{ flex: 1 }}>{subj}</MenuItem>
-                                <IconButton size="small" onClick={() => handleDeleteSubject(subj)} disabled={isSubjectInUse(subj)}>
-                                    <DeleteIcon fontSize="small" color={isSubjectInUse(subj) ? 'disabled' : 'error'} />
-                                </IconButton>
                             </Box>
                         ))}
-                        <Box sx={{ display: 'flex', mt: 1 }}>
-                            <TextField
-                                size="small"
-                                placeholder="Add subject"
-                                value={newSubject}
-                                onChange={e => setNewSubject(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') handleAddSubject(); }}
-                                sx={{ flex: 1, mr: 1 }}
-                                disabled={subjectLoading}
-                            />
-                            <Button onClick={handleAddSubject} disabled={subjectLoading || !newSubject.trim()} variant="contained">Add</Button>
-                        </Box>
-                        {subjectError && <Typography color="error" variant="caption">{subjectError}</Typography>}
-                    </Box>
-                    <TextField
-                        margin="dense"
-                        label="Description"
-                        name="description"
-                        value={editForm.description}
-                        onChange={handleEditChange}
-                        fullWidth
-                    />
-                    <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                        <DateTimePickerMenu
-                            value={editForm.dueDate}
-                            onChange={val => setEditForm(f => ({ ...f, dueDate: val }))}
-                            sx={{ flex: 1 }}
-                        />
-                        <PriorityMenuButton
-                            value={editForm.priority as Priority}
-                            onClick={e => setEditPriorityAnchorEl(e.currentTarget)}
-                            sx={{ flex: 1 }}
-                        />
-                        <PriorityMenu
-                            anchorEl={editPriorityAnchorEl}
-                            open={Boolean(editPriorityAnchorEl)}
-                            onClose={() => setEditPriorityAnchorEl(null)}
-                            value={editForm.priority as Priority}
-                            onChange={p => setEditForm(f => ({ ...f, priority: p }))}
-                        />
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ pb: 2, pr: 3 }}>
+                <DialogActions>
                     <Button onClick={closeEditDialog}>Cancel</Button>
-                    <Button onClick={handleEditSave} variant="contained">Save</Button>
+                    <Button onClick={handleEditSave} variant="contained" color="primary">Save</Button>
                 </DialogActions>
             </Dialog>
         </Box>
     );
 };
 
-export default AllTasks; 
+export default AllTasks;

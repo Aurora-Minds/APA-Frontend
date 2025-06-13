@@ -91,6 +91,9 @@ const subjectColors: Record<string, string> = {
 };
 
 const Dashboard: React.FC = () => {
+    // Define the API_BASE_URL using the environment variable
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+
     const [tasks, setTasks] = useState<Task[]>([]);
     const [open, setOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -165,7 +168,7 @@ const Dashboard: React.FC = () => {
         const fetchSubjects = async () => {
             try {
                 setSubjectLoading(true);
-                const res = await axios.get('http://localhost:5001/api/users/me/subjects');
+                const res = await axios.get(`${API_BASE_URL}/users/me/subjects`);
                 setSubjects((res.data as { subjects: string[] }).subjects || []);
             } catch (err) {
                 setSubjectError('Failed to load subjects');
@@ -174,11 +177,11 @@ const Dashboard: React.FC = () => {
             }
         };
         fetchSubjects();
-    }, []);
+    }, [API_BASE_URL]); // Add API_BASE_URL to dependencies
 
     const fetchTasks = async () => {
         try {
-            const res = await axios.get<Task[]>('http://localhost:5001/api/tasks');
+            const res = await axios.get<Task[]>(`${API_BASE_URL}/tasks`);
             setTasks(res.data);
         } catch (err) {
             console.error('Error fetching tasks:', err);
@@ -219,9 +222,9 @@ const Dashboard: React.FC = () => {
         e.preventDefault();
         try {
             if (editingTask) {
-                await axios.put(`http://localhost:5001/api/tasks/${editingTask._id}`, formData);
+                await axios.put(`${API_BASE_URL}/tasks/${editingTask._id}`, formData);
             } else {
-                await axios.post('http://localhost:5001/api/tasks', formData);
+                await axios.post(`${API_BASE_URL}/tasks`, formData);
             }
             fetchTasks();
             handleClose();
@@ -233,7 +236,7 @@ const Dashboard: React.FC = () => {
     const handleDelete = async (id: string) => {
         setDeletingId(id);
         try {
-            await axios.delete(`http://localhost:5001/api/tasks/${id}`);
+            await axios.delete(`${API_BASE_URL}/tasks/${id}`);
             fetchTasks();
         } catch (err) {
             console.error('Error deleting task:', err);
@@ -262,7 +265,7 @@ const Dashboard: React.FC = () => {
             dueDate += 'T' + quickAddTime;
         }
         try {
-            await axios.post('http://localhost:5001/api/tasks', {
+            await axios.post(`${API_BASE_URL}/tasks`, {
                 title: quickAddTitle,
                 subject: quickAddSubject,
                 description: quickAddDescription,
@@ -285,7 +288,7 @@ const Dashboard: React.FC = () => {
     // Task completion
     const handleComplete = async (task: Task) => {
         try {
-            await axios.put(`http://localhost:5001/api/tasks/${task._id}`, { ...task, status: task.status === 'completed' ? 'pending' : 'completed' });
+            await axios.put(`${API_BASE_URL}/tasks/${task._id}`, { ...task, status: task.status === 'completed' ? 'pending' : 'completed' });
             fetchTasks();
         } catch (err) {
             console.error('Error updating task:', err);
@@ -315,7 +318,7 @@ const Dashboard: React.FC = () => {
     const handleEditSave = async () => {
         if (!editTask) return;
         try {
-            await axios.put(`http://localhost:5001/api/tasks/${editTask._id}`, editForm);
+            await axios.put(`${API_BASE_URL}/tasks/${editTask._id}`, editForm);
             fetchTasks();
             closeEditDialog();
         } catch (err) {
@@ -441,7 +444,7 @@ const Dashboard: React.FC = () => {
         if (!newSubject.trim()) return;
         try {
             setSubjectLoading(true);
-            const res = await axios.post('http://localhost:5001/api/users/me/subjects', { subject: newSubject.trim() });
+            const res = await axios.post(`${API_BASE_URL}/users/me/subjects`, { subject: newSubject.trim() });
             setSubjects((res.data as { subjects: string[] }).subjects);
             setNewSubject('');
             setSubjectError('');
@@ -455,7 +458,7 @@ const Dashboard: React.FC = () => {
     const handleDeleteSubject = async (subject: string) => {
         try {
             setSubjectLoading(true);
-            const res = await axios.delete(`http://localhost:5001/api/users/me/subjects/${encodeURIComponent(subject)}`);
+            const res = await axios.delete(`${API_BASE_URL}/users/me/subjects/${encodeURIComponent(subject)}`);
             setSubjects((res.data as { subjects: string[] }).subjects);
             setSubjectError('');
         } catch (err: any) {
@@ -833,4 +836,4 @@ const Dashboard: React.FC = () => {
     );
 };
 
-export default Dashboard; 
+export default Dashboard;

@@ -1,5 +1,7 @@
 FROM node:20-alpine
 
+ARG REACT_APP_API_BASE_URL
+
 # Set working directory
 WORKDIR /app
 
@@ -11,6 +13,8 @@ RUN npm install
 
 # Copy rest of the app
 COPY . .
+
+ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
 
 # Expose the port React runs on
 EXPOSE 3000
