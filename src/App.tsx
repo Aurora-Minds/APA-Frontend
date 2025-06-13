@@ -10,6 +10,7 @@ import AllTasks from './components/AllTasks';
 import MainLayout from './components/MainLayout';
 import { ColorModeProvider, useColorMode } from './theme/ColorModeContext';
 import { useContext } from 'react';
+import FocusTimer from './components/FocusTimer';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -49,6 +50,7 @@ const App: React.FC = () => {
               }
             />
             <Route path="/tasks" element={<MainLayout><AllTasks /></MainLayout>} />
+            <Route path="/focus-timer" element={<MainLayout><FocusTimer /></MainLayout>} />
             <Route path="/" element={<Navigate to="/dashboard" />} />
           </Routes>
         </Router>
