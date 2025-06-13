@@ -3,6 +3,7 @@ import { Box, Typography, IconButton, Slider, Drawer, Button } from '@mui/materi
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import SettingsIcon from '@mui/icons-material/Settings';
+import axios from 'axios';
 
 const defaultSettings = {
   focus: 25,
@@ -42,10 +43,14 @@ const FocusTimer: React.FC = () => {
     // eslint-disable-next-line
   }, [isRunning]);
 
-  const handleTimerEnd = () => {
+  const handleTimerEnd = async () => {
     setIsRunning(false);
+    const now = new Date();
+    let sessionType = timerType;
+    let sessionDuration = 0;
     if (timerType === 'focus') {
       setIntervalCount((c) => c + 1);
+      sessionDuration = settings.focus * 60;
       if ((intervalCount + 1) % settings.longBreakInterval === 0) {
         setTimerType('longBreak');
         setSecondsLeft(settings.longBreak * 60);
@@ -53,9 +58,33 @@ const FocusTimer: React.FC = () => {
         setTimerType('shortBreak');
         setSecondsLeft(settings.shortBreak * 60);
       }
-    } else {
+    } else if (timerType === 'shortBreak') {
+      sessionDuration = settings.shortBreak * 60;
       setTimerType('focus');
       setSecondsLeft(settings.focus * 60);
+    } else {
+      sessionDuration = settings.longBreak * 60;
+      setTimerType('focus');
+      setSecondsLeft(settings.focus * 60);
+    }
+    // Save session to backend
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'}/focus-sessions`,
+        {
+          type: sessionType,
+          duration: sessionDuration,
+          startedAt: new Date(now.getTime() - sessionDuration * 1000),
+          endedAt: now,
+        },
+        {
+          headers: { 'x-auth-token': token }
+        }
+      );
+    } catch (err) {
+      // Optionally handle error
+      // console.error('Failed to save focus session', err);
     }
   };
 
