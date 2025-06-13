@@ -46,7 +46,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (token) {
             localStorage.setItem('token', token);
             axios.defaults.headers.common['x-auth-token'] = token;
-            axios.get<UserResponse>('http://localhost:5001/api/users/me')
+
+            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'; // Fallback for developmen
+            axios.get<UserResponse>('${API_BASE_URL}/users/me')
                 .then(res => {
                     setUser(res.data as User);
                     setIsAuthenticated(true);
