@@ -5,6 +5,7 @@ import ListAltIcon from '@mui/icons-material/ListAlt';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import BrightnessAutoIcon from '@mui/icons-material/BrightnessAuto';
+import SchoolIcon from '@mui/icons-material/School';
 import React, { useContext, useState } from 'react';
 import { ColorModeContext } from '../theme/ColorModeContext';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
@@ -71,6 +72,10 @@ const Sidebar = ({ dark }: { dark: boolean }) => {
         <ListItemButton component={Link} to="/tasks" selected={location.pathname === '/tasks'} sx={{ borderRadius: 2, mb: 1, bgcolor: location.pathname === '/tasks' ? 'rgba(255,255,255,0.7)' : undefined, '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
           <ListItemIcon><ListAltIcon sx={{ color: '#1976d2' }} /></ListItemIcon>
           <ListItemText primary={<Typography fontWeight={600}>Tasks</Typography>} />
+        </ListItemButton>
+        <ListItemButton component={Link} to="/focus-timer" selected={location.pathname === '/focus-timer'} sx={{ borderRadius: 2, mb: 1, bgcolor: location.pathname === '/focus-timer' ? 'rgba(255,255,255,0.7)' : undefined, '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
+          <ListItemIcon><SchoolIcon sx={{ color: '#1976d2' }} /></ListItemIcon>
+          <ListItemText primary={<Typography fontWeight={600}>Focus Timer</Typography>} />
         </ListItemButton>
       </List>
       <Box sx={{ flexGrow: 1 }} />
