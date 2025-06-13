@@ -20,7 +20,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutes in ms
+const INACTIVITY_LIMIT = parseInt(process.env.REACT_APP_INACTIVITY_TIMEOUT || '900000'); // 15 minutes in ms by default
 
 interface AuthResponse {
     token: string;
@@ -46,7 +46,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (token) {
             localStorage.setItem('token', token);
             axios.defaults.headers.common['x-auth-token'] = token;
-            axios.get<UserResponse>('http://localhost:5001/api/users/me')
+
+            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'; // Fallback for developmen
+            axios.get<UserResponse>(`${API_BASE_URL}/users/me`)
                 .then(res => {
                     setUser(res.data as User);
                     setIsAuthenticated(true);
@@ -95,7 +97,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, password: string) => {
         try {
-            const res = await axios.post<AuthResponse>('http://localhost:5001/api/auth/login', {
+            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+            const res = await axios.post<AuthResponse>(`${API_BASE_URL}/auth/login`, {
                 email,
                 password
             });
@@ -104,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             axios.defaults.headers.common['x-auth-token'] = token;
             setToken(token);
             setIsAuthenticated(true);
-            const userRes = await axios.get<UserResponse>('http://localhost:5001/api/users/me');
+            const userRes = await axios.get<UserResponse>(`${API_BASE_URL}/users/me`);
             setUser(userRes.data as User);
         } catch (err) {
             throw err;
@@ -113,7 +116,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const register = async (name: string, email: string, password: string) => {
         try {
-            await axios.post<AuthResponse>('http://localhost:5001/api/auth/register', {
+            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+            await axios.post<AuthResponse>(`${API_BASE_URL}/auth/register`, {
                 name,
                 email,
                 password
@@ -132,7 +136,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const setTheme = async (theme: 'light' | 'dark' | 'system') => {
         if (!token) return;
-        await axios.put('http://localhost:5001/api/users/me', { theme });
+        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+        await axios.put(`${API_BASE_URL}/users/me`, { theme });
         setUser(prev => prev ? { ...prev, theme } : prev);
     };
 

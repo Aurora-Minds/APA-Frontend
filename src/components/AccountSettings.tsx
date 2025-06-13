@@ -18,7 +18,8 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({ open, onClose }) => {
     setSuccess('');
     setError('');
     try {
-      await axios.put('http://localhost:5001/api/users/me', { name, password });
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'; // Fallback for developmen
+      await axios.put(`${API_BASE_URL}/users/me`, { name, password });
       setSuccess('Account updated successfully!');
       setName('');
       setPassword('');

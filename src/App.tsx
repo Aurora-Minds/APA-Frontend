@@ -22,10 +22,10 @@ const App: React.FC = () => {
     palette: {
       mode,
       primary: {
-        main: '#1976d2',
+        main: process.env.REACT_APP_PRIMARY_COLOR || '#1976d2',
       },
       secondary: {
-        main: '#dc004e',
+        main: process.env.REACT_APP_SECONDARY_COLOR || '#dc004e',
       },
     },
   });
