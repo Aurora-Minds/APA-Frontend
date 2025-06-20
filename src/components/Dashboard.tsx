@@ -492,17 +492,24 @@ const Dashboard: React.FC = () => {
                             </Menu>
                         </Box>
                     </Box>
-                    <Paper sx={{ p: 3, mb: 3, borderRadius: 3, background: 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: '#111' }}>
+                    <Paper sx={{ p: 3, mb: 3, borderRadius: 3, background: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: theme.palette.text.primary }}>
                         <Typography variant="h6" fontWeight={600}>{greeting.replace('.', '')}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</Typography>
                         <Typography>{taskText}</Typography>
                     </Paper>
                     {/* Quick Add Task */}
-                    <Paper sx={{ p: 2, mb: 3, borderRadius: 3, boxShadow: 2, background: 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: '#111' }}>
+                    <Paper sx={{ p: 2, mb: 3, borderRadius: 3, boxShadow: 2, background: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: theme.palette.text.primary }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
                                 <input
                                     placeholder="Quick add task"
-                                    style={{ border: 'none', outline: 'none', fontSize: 16, width: '100%' }}
+                                    style={{
+                                        border: 'none',
+                                        outline: 'none',
+                                        fontSize: 16,
+                                        width: '100%',
+                                        background: 'transparent',
+                                        color: 'inherit'
+                                    }}
                                     value={quickAddTitle}
                                     onChange={e => setQuickAddTitle(e.target.value)}
                                     onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd(); }}
@@ -512,7 +519,7 @@ const Dashboard: React.FC = () => {
                                     size="small"
                                     value={quickAddDescription}
                                     onChange={e => setQuickAddDescription(e.target.value)}
-                                    sx={{ bgcolor: 'white', borderRadius: 1 }}
+                                    sx={{ bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'white', borderRadius: 1 }}
                                 />
                             </Box>
                             <IconButton color="primary" onClick={handleQuickAdd} sx={{ alignSelf: 'flex-start', mt: 0.5 }}>
@@ -586,12 +593,12 @@ const Dashboard: React.FC = () => {
                     </Paper>
                     {/* Today's Tasks */}
                     <Typography variant="h6" sx={{ mb: 1 }}>Today's tasks</Typography>
-                    <Paper sx={{ p: 2, mb: 3, borderRadius: 3, boxShadow: 1, background: 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: '#111' }}>
+                    <Paper sx={{ p: 2, mb: 3, borderRadius: 3, boxShadow: 1, background: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: theme.palette.text.primary }}>
                         {todaysTasks.length === 0 ? (
                             <Typography>No tasks for today.</Typography>
                         ) : (
                             todaysTasks.map(task => (
-                                <Box key={task._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, p: 1, borderRadius: 2, '&:hover': { bgcolor: '#f0f4fa' } }}>
+                                <Box key={task._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, p: 1, borderRadius: 2, '&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#f0f4fa' } }}>
                                     <Chip
                                         label={task.subject || 'No Subject'}
                                         size="small"
@@ -618,12 +625,12 @@ const Dashboard: React.FC = () => {
                     </Paper>
                     {/* Upcoming Tasks */}
                     <Typography variant="h6" sx={{ mb: 1 }}>Upcoming tasks</Typography>
-                    <Paper sx={{ p: 2, borderRadius: 3, boxShadow: 1, background: 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: '#111' }}>
+                    <Paper sx={{ p: 2, borderRadius: 3, boxShadow: 1, background: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(90deg, #b2d8fd 0%, #e0eafc 100%)', color: theme.palette.text.primary }}>
                         {upcomingTasks.length === 0 ? (
                             <Typography>No upcoming tasks.</Typography>
                         ) : (
                             upcomingTasks.map(task => (
-                                <Box key={task._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, p: 1, borderRadius: 2, '&:hover': { bgcolor: '#f0f4fa' } }}>
+                                <Box key={task._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, p: 1, borderRadius: 2, '&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#f0f4fa' } }}>
                                     <Chip
                                         label={task.subject || 'No Subject'}
                                         size="small"
@@ -730,7 +737,7 @@ const Dashboard: React.FC = () => {
                             value={timerDuration}
                             onChange={handleDurationChange}
                             inputProps={{ min: 1, max: 120 }}
-                            sx={{ mb: 2, bgcolor: 'white', color: '#1976d2', borderColor: '#1976d2', borderRadius: 1, '& .MuiInputBase-input': { color: '#1976d2' }, '& .MuiInputLabel-root': { color: '#1976d2' } }}
+                            sx={{ mb: 2, bgcolor: 'white', borderRadius: 1, '& .MuiInputBase-input': { color: '#1976d2' }, '& .MuiInputLabel-root': { color: '#1976d2' } }}
                             fullWidth
                         />
                         <Select
@@ -783,12 +790,10 @@ const Dashboard: React.FC = () => {
                                 onClick={handleStart}
                                 disabled={isRunning || !focusTaskId}
                                 sx={{
-                                    bgcolor: isRunning || !focusTaskId
-                                        ? 'rgba(255,255,255,0.4)'
-                                        : 'white',
                                     color: isRunning || !focusTaskId ? '#90A4AE' : '#1976d2',
                                     borderColor: '#1976d2',
                                     boxShadow: 'none',
+                                    bgcolor: isRunning || !focusTaskId ? 'rgba(255,255,255,0.4)' : 'white',
                                     '&.Mui-disabled': {
                                         bgcolor: 'rgba(255,255,255,0.4)',
                                         color: '#90A4AE',
@@ -805,10 +810,10 @@ const Dashboard: React.FC = () => {
                                 onClick={handlePause}
                                 disabled={!isRunning}
                                 sx={{
-                                    bgcolor: !isRunning ? 'rgba(255,255,255,0.4)' : 'white',
                                     color: !isRunning ? '#90A4AE' : '#1976d2',
                                     borderColor: '#1976d2',
                                     boxShadow: 'none',
+                                    bgcolor: !isRunning ? 'rgba(255,255,255,0.4)' : 'white',
                                     '&.Mui-disabled': {
                                         bgcolor: 'rgba(255,255,255,0.4)',
                                         color: '#90A4AE',
