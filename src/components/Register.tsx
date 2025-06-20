@@ -28,7 +28,7 @@ const Register: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await register(name, email, password);
+            await register({ name, email, password });
             navigate('/login');
         } catch (err: any) {
             setError(err.response?.data?.msg || 'An error occurred');
