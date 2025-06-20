@@ -28,8 +28,32 @@ jobs:
             docker build . \
               --build-arg REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }} \
               --build-arg REACT_APP_PORT=${{ secrets.REACT_APP_PORT }} \
+              --build-arg REACT_APP_INACTIVITY_TIMEOUT=${{ secrets.REACT_APP_INACTIVITY_TIMEOUT }} \
               --build-arg REACT_APP_PRIMARY_COLOR=${{ secrets.REACT_APP_PRIMARY_COLOR }} \
               --build-arg REACT_APP_SECONDARY_COLOR=${{ secrets.REACT_APP_SECONDARY_COLOR }} \
               -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/apa-webapp:${{ env.IMAGE_TAG }}
             docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/apa-webapp:${{ env.IMAGE_TAG }}
-            
+
+        - name: Deploy to Server
+          uses: appleboy/ssh-action@v0.1.5
+          with:
+            host: ${{ secrets.SERVER_HOST }}
+            username: ${{ secrets.SERVER_USERNAME }}
+            key: ${{ secrets.SERVER_SSH_KEY }}
+            script: |
+              # Get current frontend tag from docker-compose.yml
+              CURRENT_TAG=$(grep -o 'apa-webapp:v[0-9]*' docker-compose.yml | head -1)
+              NEW_TAG="apa-webapp:${{ env.IMAGE_TAG }}"
+              
+              # Only update and restart if tag has changed
+              if [ "$CURRENT_TAG" != "$NEW_TAG" ]; then
+                echo "Updating from $CURRENT_TAG to $NEW_TAG"
+                # Update docker-compose.yml with new frontend tag
+                sed -i "s|apa-webapp:v[0-9]*|$NEW_TAG|g" docker-compose.yml
+                # Pull new images and restart services
+                docker-compose pull
+                docker-compose up -d
+                echo "Deployment completed successfully"
+              else
+                echo "No changes detected. Current tag: $CURRENT_TAG"
+              fi
