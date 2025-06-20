@@ -1,22 +1,17 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 import { User, UserResponse } from '../types';
 
 interface AuthContextType {
     user: User | null;
-    token: string | null;
-    login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
-    register: (name: string, email: string, password: string) => Promise<void>;
+    login: (formData: any) => Promise<UserResponse>;
+    register: (formData: any) => Promise<UserResponse>;
     logout: () => void;
+    setTheme: (theme: 'light' | 'dark' | 'system') => void;
     isAuthenticated: boolean;
-    setTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-interface AuthResponse {
-    token: string;
-}
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
     const context = React.useContext(AuthContext);
@@ -26,91 +21,77 @@ export const useAuth = () => {
     return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+    children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [authLoading, setAuthLoading] = useState(true);
 
-    // Session persistence and fetch user info on mount or token change
     useEffect(() => {
-        if (token) {
-            localStorage.setItem('token', token);
-            axios.defaults.headers.common['x-auth-token'] = token;
-
-            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
-            axios.get<UserResponse>(`${API_BASE_URL}/users/me`)
-                .then(res => {
-                    setUser(res.data as User);
+        const loadUser = async () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                axios.defaults.headers.common['x-auth-token'] = token;
+                try {
+                    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+                    const res = await axios.get<{ user: User }>(`${API_BASE_URL}/auth`);
+                    setUser(res.data.user);
                     setIsAuthenticated(true);
-                    setAuthLoading(false);
-                })
-                .catch(() => {
+                } catch (err) {
+                    localStorage.removeItem('token');
                     setUser(null);
                     setIsAuthenticated(false);
-                    setToken(null);
-                    localStorage.removeItem('token');
-                    setAuthLoading(false);
-                });
-        } else {
-            localStorage.removeItem('token');
-            delete axios.defaults.headers.common['x-auth-token'];
-            setUser(null);
-            setIsAuthenticated(false);
-            setAuthLoading(false);
-        }
-    }, [token]);
+                    delete axios.defaults.headers.common['x-auth-token'];
+                }
+            }
+        };
+        loadUser();
+    }, []);
 
-    const login = async (email: string, password: string, rememberMe: boolean) => {
-        try {
-            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
-            const res = await axios.post<AuthResponse>(`${API_BASE_URL}/auth/login`, {
-                email,
-                password,
-                rememberMe
-            });
-            const token = res.data.token;
-            localStorage.setItem('token', token);
-            axios.defaults.headers.common['x-auth-token'] = token;
-            setToken(token);
-            setIsAuthenticated(true);
-            const userRes = await axios.get<UserResponse>(`${API_BASE_URL}/users/me`);
-            setUser(userRes.data as User);
-        } catch (err) {
-            throw err;
-        }
+    const login = async (formData: any) => {
+        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+        const response = await axios.post<UserResponse>(`${API_BASE_URL}/auth/login`, formData);
+        localStorage.setItem('token', response.data.token);
+        axios.defaults.headers.common['x-auth-token'] = response.data.token;
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        return response.data;
     };
 
-    const register = async (name: string, email: string, password: string) => {
-        try {
-            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
-            await axios.post<AuthResponse>(`${API_BASE_URL}/auth/register`, {
-                name,
-                email,
-                password
-            });
-            // Do not set token, user, or isAuthenticated here
-        } catch (err) {
-            throw err;
-        }
+    const register = async (formData: any) => {
+        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+        const response = await axios.post<UserResponse>(`${API_BASE_URL}/auth/register`, formData);
+        localStorage.setItem('token', response.data.token);
+        axios.defaults.headers.common['x-auth-token'] = response.data.token;
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        return response.data;
     };
 
     const logout = () => {
-        setToken(null);
+        localStorage.removeItem('token');
         setUser(null);
         setIsAuthenticated(false);
+        delete axios.defaults.headers.common['x-auth-token'];
     };
 
     const setTheme = async (theme: 'light' | 'dark' | 'system') => {
-        if (!token) return;
-        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
-        await axios.put(`${API_BASE_URL}/users/me`, { theme });
-        setUser(prev => prev ? { ...prev, theme } : prev);
+        if (user) {
+            try {
+                const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+                await axios.put(`${API_BASE_URL}/users/me`, { theme });
+                setUser((prev) => (prev ? { ...prev, theme } : prev));
+            } catch (error) {
+                console.error('Failed to update theme', error);
+            }
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated, setTheme }}>
-            {!authLoading && children}
+        <AuthContext.Provider value={{ user, login, register, logout, setTheme, isAuthenticated }}>
+            {children}
         </AuthContext.Provider>
     );
 }; 
