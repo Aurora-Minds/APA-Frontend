@@ -10,9 +10,20 @@ import AllTasks from './components/AllTasks';
 import MainLayout from './components/MainLayout';
 import { ColorModeProvider, useColorMode } from './theme/ColorModeContext';
 import { useContext } from 'react';
+import FocusTimer from './components/FocusTimer';
+import { CircularProgress, Box } from '@mui/material';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
@@ -49,6 +60,7 @@ const App: React.FC = () => {
               }
             />
             <Route path="/tasks" element={<MainLayout><AllTasks /></MainLayout>} />
+            <Route path="/focus-timer" element={<MainLayout><FocusTimer /></MainLayout>} />
             <Route path="/" element={<Navigate to="/dashboard" />} />
           </Routes>
         </Router>

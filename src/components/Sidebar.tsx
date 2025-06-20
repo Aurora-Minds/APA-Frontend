@@ -1,14 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
-import { List, ListItemButton, ListItemIcon, ListItemText, Typography, Box, Avatar, IconButton, useTheme, Menu, MenuItem, ListItemIcon as MuiListItemIcon } from '@mui/material';
+import { List, ListItemButton, ListItemIcon, ListItemText, Typography, Box, Avatar, IconButton, useTheme, Menu, MenuItem, ListItemIcon as MuiListItemIcon, Drawer, Divider } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import BrightnessAutoIcon from '@mui/icons-material/BrightnessAuto';
+import SchoolIcon from '@mui/icons-material/School';
 import React, { useContext, useState } from 'react';
 import { ColorModeContext } from '../theme/ColorModeContext';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
-import auroraLogo from '../AuroraMindsLogo.png';
 
 const Sidebar = ({ dark }: { dark: boolean }) => {
   const location = useLocation();
@@ -61,16 +61,20 @@ const Sidebar = ({ dark }: { dark: boolean }) => {
           <MuiListItemIcon><Brightness4Icon /></MuiListItemIcon>Dark
         </MenuItem>
       </Menu>
-      <img src={auroraLogo} alt="Aurora Minds Logo" style={{ width: 56, height: 56, marginBottom: 16, borderRadius: 16, objectFit: 'cover', background: '#fff' }} />
-      <Typography variant="h6" sx={{ mb: 4, fontWeight: 700, letterSpacing: 1 }}>Aurora Mind</Typography>
+      <img src="/aurora-minds-logo.png" alt="Aurora Minds Logo" style={{ width: 100, height: 100, marginBottom: 16, borderRadius: 16, objectFit: 'cover' }} />
+      <Typography variant="h6" sx={{ mb: 4, fontWeight: 700, letterSpacing: 1 }}>Aurora Minds</Typography>
       <List sx={{ width: '100%' }}>
-        <ListItemButton component={Link} to="/" selected={location.pathname === '/'} sx={{ borderRadius: 2, mb: 1, bgcolor: location.pathname === '/' ? 'rgba(255,255,255,0.7)' : undefined, '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
+        <ListItemButton component={Link} to="/" selected={location.pathname === '/'} sx={{ borderRadius: 2, mb: 1, bgcolor: location.pathname === '/' ? 'rgba(0,0,0,0.1)' : undefined, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
           <ListItemIcon><DashboardIcon sx={{ color: '#1976d2' }} /></ListItemIcon>
           <ListItemText primary={<Typography fontWeight={600}>Dashboard</Typography>} />
         </ListItemButton>
-        <ListItemButton component={Link} to="/tasks" selected={location.pathname === '/tasks'} sx={{ borderRadius: 2, mb: 1, bgcolor: location.pathname === '/tasks' ? 'rgba(255,255,255,0.7)' : undefined, '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
+        <ListItemButton component={Link} to="/tasks" selected={location.pathname === '/tasks'} sx={{ borderRadius: 2, mb: 1, bgcolor: location.pathname === '/tasks' ? 'rgba(0,0,0,0.1)' : undefined, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
           <ListItemIcon><ListAltIcon sx={{ color: '#1976d2' }} /></ListItemIcon>
           <ListItemText primary={<Typography fontWeight={600}>Tasks</Typography>} />
+        </ListItemButton>
+        <ListItemButton component={Link} to="/focus-timer" selected={location.pathname === '/focus-timer'} sx={{ borderRadius: 2, mb: 1, bgcolor: location.pathname === '/focus-timer' ? 'rgba(0,0,0,0.1)' : undefined, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
+          <ListItemIcon><SchoolIcon sx={{ color: '#1976d2' }} /></ListItemIcon>
+          <ListItemText primary={<Typography fontWeight={600}>Focus Timer</Typography>} />
         </ListItemButton>
       </List>
       <Box sx={{ flexGrow: 1 }} />
