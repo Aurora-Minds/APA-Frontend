@@ -92,7 +92,7 @@ const subjectColors: Record<string, string> = {
 
 const Dashboard: React.FC = () => {
     // Define the API_BASE_URL using the environment variable
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [open, setOpen] = useState(false);

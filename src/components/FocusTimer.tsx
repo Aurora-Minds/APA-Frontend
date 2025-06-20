@@ -71,7 +71,7 @@ const FocusTimer: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api'}/focus-sessions`,
+        `${process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api'}/focus-sessions`,
         {
           type: sessionType,
           duration: sessionDuration,
