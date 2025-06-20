@@ -255,7 +255,14 @@ const Dashboard: React.FC = () => {
 
     // Quick add handler
     const handleQuickAdd = async () => {
-        if (!quickAddTitle.trim()) return;
+        if (!quickAddTitle.trim()) {
+            alert('Task title is required.');
+            return;
+        }
+        if (!quickAddSubject.trim()) {
+            alert('Task subject is required.');
+            return;
+        }
         let dueDate = quickAddDate;
         if (!dueDate) {
             const today = new Date();
@@ -284,6 +291,8 @@ const Dashboard: React.FC = () => {
             fetchTasks();
         } catch (err) {
             if (err.response && err.response.data && err.response.data.errors) {
+                const messages = err.response.data.errors.map((e: any) => e.msg).join('\n');
+                alert('Validation error(s):\n' + messages);
                 console.error('Validation errors:', err.response.data.errors);
             }
             console.error('Error adding task:', err);
