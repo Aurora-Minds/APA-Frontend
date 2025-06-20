@@ -264,15 +264,17 @@ const Dashboard: React.FC = () => {
         if (quickAddTime) {
             dueDate += 'T' + quickAddTime;
         }
+        const dataToSend = {
+            title: quickAddTitle,
+            subject: quickAddSubject,
+            description: quickAddDescription,
+            dueDate,
+            priority: quickAddPriority,
+            status: 'pending',
+        };
+        console.log('Sending task data:', dataToSend);
         try {
-            await axios.post(`${API_BASE_URL}/tasks`, {
-                title: quickAddTitle,
-                subject: quickAddSubject,
-                description: quickAddDescription,
-                dueDate,
-                priority: quickAddPriority,
-                status: 'pending',
-            });
+            await axios.post(`${API_BASE_URL}/tasks`, dataToSend);
             setQuickAddTitle('');
             setQuickAddSubject('');
             setQuickAddDescription('');
@@ -281,6 +283,9 @@ const Dashboard: React.FC = () => {
             setQuickAddPriority('medium');
             fetchTasks();
         } catch (err) {
+            if (err.response && err.response.data && err.response.data.errors) {
+                console.error('Validation errors:', err.response.data.errors);
+            }
             console.error('Error adding task:', err);
         }
     };
