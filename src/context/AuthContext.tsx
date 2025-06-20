@@ -9,6 +9,7 @@ interface AuthContextType {
     logout: () => void;
     setTheme: (theme: 'light' | 'dark' | 'system') => void;
     isAuthenticated: boolean;
+    loading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +29,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loadUser = async () => {
@@ -46,6 +48,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     delete axios.defaults.headers.common['x-auth-token'];
                 }
             }
+            setLoading(false);
         };
         loadUser();
     }, []);
@@ -90,7 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, setTheme, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, login, register, logout, setTheme, isAuthenticated, loading }}>
             {children}
         </AuthContext.Provider>
     );
