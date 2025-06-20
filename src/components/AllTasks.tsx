@@ -69,7 +69,7 @@ const AllTasks: React.FC = () => {
     const [subjectLoading, setSubjectLoading] = useState(false);
     const [subjectError, setSubjectError] = useState('');
 
-    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
 
     useEffect(() => {
         fetchTasks();

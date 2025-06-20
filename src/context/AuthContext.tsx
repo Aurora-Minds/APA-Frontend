@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (token) {
                 axios.defaults.headers.common['x-auth-token'] = token;
                 try {
-                    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+                    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
                     const res = await axios.get<{ user: User }>(`${API_BASE_URL}/auth`);
                     setUser(res.data.user);
                     setIsAuthenticated(true);
@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, []);
 
     const login = async (formData: any) => {
-        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
         const response = await axios.post<UserResponse>(`${API_BASE_URL}/auth/login`, formData);
         localStorage.setItem('token', response.data.token);
         axios.defaults.headers.common['x-auth-token'] = response.data.token;
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     const register = async (formData: any) => {
-        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+        const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
         const response = await axios.post<UserResponse>(`${API_BASE_URL}/auth/register`, formData);
         localStorage.setItem('token', response.data.token);
         axios.defaults.headers.common['x-auth-token'] = response.data.token;
@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const setTheme = async (theme: 'light' | 'dark' | 'system') => {
         if (user) {
             try {
-                const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+                const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
                 await axios.put(`${API_BASE_URL}/users/me`, { theme });
                 setUser((prev) => (prev ? { ...prev, theme } : prev));
             } catch (error) {
