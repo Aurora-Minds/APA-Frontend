@@ -5,12 +5,18 @@ import {
     Box, Divider, useTheme, IconButton, Menu, MenuItem
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import TasksIcon from '@mui/icons-material/Assignment';
-import TimerIcon from '@mui/icons-material/Timer';
+import TableChartIcon from '@mui/icons-material/TableChart';
+import ReceiptIcon from '@mui/icons-material/ReceiptLong';
+import GTranslateIcon from '@mui/icons-material/GTranslate';
+import PersonIcon from '@mui/icons-material/Person';
+import LoginIcon from '@mui/icons-material/Login';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import BrightnessAutoIcon from '@mui/icons-material/BrightnessAuto';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import TimerIcon from '@mui/icons-material/Timer';
 import { useColorMode } from '../theme/ColorModeContext';
 
 const Sidebar: React.FC = () => {
@@ -32,10 +38,13 @@ const Sidebar: React.FC = () => {
         handleMenuClose();
     };
 
-    const menuItems = [
+    const mainMenu = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-        { text: 'Tasks', icon: <TasksIcon />, path: '/tasks' },
+        { text: 'Tasks', icon: <AssignmentIcon />, path: '/tasks' },
         { text: 'Focus Timer', icon: <TimerIcon />, path: '/focus-timer' },
+    ];
+    const accountMenu = [
+        { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
     ];
 
     return (
@@ -48,9 +57,17 @@ const Sidebar: React.FC = () => {
                     width: 280,
                     boxSizing: 'border-box',
                     borderRight: 'none',
-                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 42, 0.9)' : 'rgba(248, 249, 250, 0.9)',
-                    backdropFilter: 'blur(10px)',
-                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1)',
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    borderTopRightRadius: 24,
+                    borderBottomRightRadius: 24,
+                    margin: 0,
+                    height: '100vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    boxShadow: '2px 0 24px 0 rgba(44,48,74,0.18)', // subtle right shadow
+                    background: 'none', // transparent
+                    backdropFilter: 'none',
                 },
             }}
         >
@@ -58,62 +75,77 @@ const Sidebar: React.FC = () => {
                 p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center',
                 justifyContent: 'center', height: 'auto', my: 2, position: 'relative'
             }}>
-                <IconButton
-                    onClick={handleMenuClick}
-                    sx={{ position: 'absolute', top: -5, right: 0, color: 'text.secondary' }}
-                >
-                    <SettingsIcon />
-                </IconButton>
-                <img src="/aurora-minds-logo.png" alt="Aurora Minds Logo" style={{ width: 100, height: 100, marginBottom: 16, borderRadius: 16, objectFit: 'cover' }} />
+                {/* Removed settings/gear icon and theme switcher menu for top bar relocation */}
+                <img src="/aurora-minds-logo.png" alt="Aurora Minds Logo" style={{ width: 90, height: 90, marginBottom: 16, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 24px 0 rgba(0,0,0,0.2)' }} />
                 <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: 1, color: theme.palette.text.primary }}>
                     Aurora Minds
                 </Typography>
             </Box>
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-            >
-                <MenuItem onClick={() => handleThemeChange('system')} selected={userPref === 'system'}>
-                    <ListItemIcon><BrightnessAutoIcon fontSize="small" /></ListItemIcon>
-                    System
-                </MenuItem>
-                <MenuItem onClick={() => handleThemeChange('light')} selected={userPref === 'light'}>
-                    <ListItemIcon><Brightness7Icon fontSize="small" /></ListItemIcon>
-                    Light
-                </MenuItem>
-                <MenuItem onClick={() => handleThemeChange('dark')} selected={userPref === 'dark'}>
-                    <ListItemIcon><Brightness4Icon fontSize="small" /></ListItemIcon>
-                    Dark
-                </MenuItem>
-            </Menu>
-            <Divider sx={{ mx: 2, borderColor: 'rgba(255, 255, 255, 0.12)' }} />
-            <List sx={{ p: 2 }}>
-                {menuItems.map((item) => (
+            <Divider sx={{ mx: 2, borderColor: 'rgba(255,255,255,0.12)', my: 1 }} />
+            <List sx={{ p: 1 }}>
+                {mainMenu.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
                         <ListItemButton
                             component={Link}
                             to={item.path}
                             selected={location.pathname === item.path}
                             sx={{
-                                borderRadius: 2,
+                                borderRadius: 3,
+                                px: 2,
+                                py: 1.2,
+                                color: location.pathname === item.path ? 'primary.main' : 'text.secondary',
+                                background: location.pathname === item.path ? 'rgba(76,110,245,0.12)' : 'none',
                                 '&.Mui-selected': {
-                                    backgroundColor: theme.palette.action.selected,
-                                    '&:hover': {
-                                        backgroundColor: theme.palette.action.hover,
-                                    },
+                                    background: 'rgba(76,110,245,0.18)',
+                                    color: 'primary.main',
                                 },
                                 '&:hover': {
-                                    backgroundColor: theme.palette.action.hover,
+                                    background: 'rgba(76,110,245,0.10)',
+                                    color: 'primary.main',
                                 },
+                                transition: 'all 0.2s',
                             }}
                         >
-                            <ListItemIcon sx={{ color: theme.palette.text.secondary }}>{item.icon}</ListItemIcon>
-                            <ListItemText primary={item.text} sx={{ color: theme.palette.text.primary }} />
+                            <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>{item.icon}</ListItemIcon>
+                            <ListItemText primary={item.text} sx={{ color: 'inherit' }} />
                         </ListItemButton>
                     </ListItem>
                 ))}
             </List>
+            <Typography variant="caption" sx={{ color: 'text.secondary', px: 3, mt: 2, mb: 0.5, fontWeight: 700, letterSpacing: 1 }}>
+                ACCOUNT PAGES
+            </Typography>
+            <List sx={{ p: 1 }}>
+                {accountMenu.map((item) => (
+                    <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
+                        <ListItemButton
+                            component={Link}
+                            to={item.path}
+                            selected={location.pathname === item.path}
+                            sx={{
+                                borderRadius: 3,
+                                px: 2,
+                                py: 1.2,
+                                color: location.pathname === item.path ? 'primary.main' : 'text.secondary',
+                                background: location.pathname === item.path ? 'rgba(76,110,245,0.12)' : 'none',
+                                '&.Mui-selected': {
+                                    background: 'rgba(76,110,245,0.18)',
+                                    color: 'primary.main',
+                                },
+                                '&:hover': {
+                                    background: 'rgba(76,110,245,0.10)',
+                                    color: 'primary.main',
+                                },
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>{item.icon}</ListItemIcon>
+                            <ListItemText primary={item.text} sx={{ color: 'inherit' }} />
+                        </ListItemButton>
+                    </ListItem>
+                ))}
+            </List>
+            <Box sx={{ flexGrow: 1 }} />
         </Drawer>
     );
 };
