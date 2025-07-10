@@ -29,17 +29,17 @@ const App: React.FC = () => {
   const theme = createTheme({
     palette: {
       mode,
-      ...(mode === 'light' 
-        ? {
-            // palette for light mode
-            primary: { main: '#1976d2' },
-            background: { default: '#f4f7fe', paper: '#ffffff' },
-          }
-        : {
-            // palette for dark mode
-            primary: { main: '#90caf9' },
-            background: { default: '#121212', paper: '#1e1e1e' },
-          }),
+      primary: { main: '#4318ff' },
+      secondary: { main: '#0f1535' },
+      info: { main: '#0075ff' },
+      success: { main: '#01b574' },
+      warning: { main: '#ffb547' },
+      error: { main: '#e31a1a' },
+      background: {
+        default: '#0f1535',
+        paper: 'rgba(6, 11, 40, 0.94)',
+      },
+      // Remove gradients and neutrals from palette for linter compliance
     },
   });
 

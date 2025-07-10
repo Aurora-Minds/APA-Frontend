@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Typography, IconButton, Slider, Drawer, Button } from '@mui/material';
+import { Box, Typography, IconButton, Slider, Button } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -116,13 +116,13 @@ const FocusTimer: React.FC = () => {
       minHeight: '80vh',
       position: 'relative',
     }}>
-      <Box sx={{ position: 'absolute', top: 24, right: 24 }}>
+      <Box sx={{ position: 'absolute', top: 24, right: 24, zIndex: 2 }}>
         <IconButton onClick={handleSettingsOpen}>
           <SettingsIcon sx={{ color: '#fff' }} />
         </IconButton>
       </Box>
       <Typography variant="h4" sx={{ color: '#fff', mt: 4, mb: 2, fontWeight: 700 }}>Time to focus</Typography>
-      <Typography sx={{ color: '#e3f2fd', mb: 4 }}>Stay focused, accomplish more</Typography>
+      {/* Removed long quote for a cleaner look */}
       <Box sx={{
         width: 300,
         height: 300,
@@ -136,26 +136,122 @@ const FocusTimer: React.FC = () => {
         mb: 4,
         position: 'relative',
       }}>
-        <Typography variant="h2" sx={{ color: '#fff', fontWeight: 700 }}>{minutes}:{seconds}</Typography>
-        <Typography sx={{ color: '#e3f2fd', mb: 2 }}>{timerType === 'focus' ? 'Focus' : timerType === 'shortBreak' ? 'Short Break' : 'Long Break'}</Typography>
-        <IconButton onClick={handlePlayPause} sx={{ background: '#fff', color: '#2980b9', mt: 2, '&:hover': { background: '#e3f2fd' } }}>
+        {/* SVG Circular Progress */}
+        <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+          {(() => {
+            const size = 300;
+            const strokeWidth = 14;
+            const radius = (size - strokeWidth) / 2;
+            const circumference = 2 * Math.PI * radius;
+            const progress = secondsLeft / (settings[timerType] * 60);
+            // Clockwise: offset increases as time passes (arc grows)
+            const offset = circumference * progress;
+            return (
+              <svg width={size} height={size}>
+                {/* Base ring (grey) */}
+                <circle
+                  cx={size / 2}
+                  cy={size / 2}
+                  r={radius}
+                  fill="none"
+                  stroke="#b0b6c3"
+                  strokeWidth={strokeWidth}
+                />
+                {/* Progress ring (blue, counterclockwise) */}
+                <circle
+                  cx={size / 2}
+                  cy={size / 2}
+                  r={radius}
+                  fill="none"
+                  stroke="#2196f3"
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={offset}
+                  strokeLinecap="round"
+                  style={{
+                    transition: 'stroke-dashoffset 1s linear',
+                    transform: 'rotate(90deg)',
+                    transformOrigin: '50% 50%',
+                  }}
+                />
+              </svg>
+            );
+          })()}
+        </Box>
+        {/* Timer value centered */}
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          zIndex: 1,
+        }}>
+          <Typography variant="h2" sx={{ color: '#fff', fontWeight: 700 }}>{minutes}:{seconds}</Typography>
+        </Box>
+        {/* Remove the FOCUS/Break label from inside the circle */}
+        <IconButton onClick={handlePlayPause} sx={{ background: '#fff', color: '#2980b9', mt: 2, '&:hover': { background: '#e3f2fd' }, zIndex: 2 }}>
           {isRunning ? <PauseIcon /> : <PlayArrowIcon />}
         </IconButton>
+        {/* Local Settings Modal Overlay */}
+        {showSettings && (
+          <>
+            {/* Local Backdrop */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                background: 'rgba(20,20,30,0.7)',
+                borderRadius: '50%',
+                zIndex: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onClick={handleSettingsClose}
+            />
+            {/* Glassy Modal */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: 'rgba(40,40,60,0.95)',
+                borderRadius: 6,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                padding: 4,
+                zIndex: 20,
+                minWidth: 260,
+                width: '90%',
+                maxWidth: 320,
+                color: '#fff',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
+              <Typography variant="h6" sx={{ mb: 2 }}>Focus Timer Settings</Typography>
+              <Typography sx={{ mb: 1 }}>Focus time: {settings.focus} min</Typography>
+              <Slider min={1} max={60} value={settings.focus} onChange={(_, v) => handleSliderChange('focus', v as number)} sx={{ mb: 2, width: '90%' }} />
+              <Typography sx={{ mb: 1 }}>Short break: {settings.shortBreak} min</Typography>
+              <Slider min={1} max={30} value={settings.shortBreak} onChange={(_, v) => handleSliderChange('shortBreak', v as number)} sx={{ mb: 2, width: '90%' }} />
+              <Typography sx={{ mb: 1 }}>Long break: {settings.longBreak} min</Typography>
+              <Slider min={5} max={60} value={settings.longBreak} onChange={(_, v) => handleSliderChange('longBreak', v as number)} sx={{ mb: 2, width: '90%' }} />
+              <Typography sx={{ mb: 1 }}>Long break interval: {settings.longBreakInterval} intervals</Typography>
+              <Slider min={1} max={8} value={settings.longBreakInterval} onChange={(_, v) => handleSliderChange('longBreakInterval', v as number)} sx={{ mb: 2, width: '90%' }} />
+              <Button variant="contained" onClick={handleSettingsClose} sx={{ mt: 2, background: '#fff', color: '#2980b9', fontWeight: 700 }}>Done</Button>
+            </Box>
+          </>
+        )}
       </Box>
-      <Drawer anchor="right" open={showSettings} onClose={handleSettingsClose}>
-        <Box sx={{ width: 400, p: 4, background: 'linear-gradient(135deg, #6dd5fa 0%, #2980b9 100%)', height: '100%' }}>
-          <Typography variant="h5" sx={{ color: '#fff', mb: 3 }}>Focus Timer Settings</Typography>
-          <Typography sx={{ color: '#fff', mb: 1 }}>Focus time: {settings.focus} min</Typography>
-          <Slider min={1} max={60} value={settings.focus} onChange={(_, v) => handleSliderChange('focus', v as number)} sx={{ mb: 3 }} />
-          <Typography sx={{ color: '#fff', mb: 1 }}>Short break: {settings.shortBreak} min</Typography>
-          <Slider min={1} max={30} value={settings.shortBreak} onChange={(_, v) => handleSliderChange('shortBreak', v as number)} sx={{ mb: 3 }} />
-          <Typography sx={{ color: '#fff', mb: 1 }}>Long break: {settings.longBreak} min</Typography>
-          <Slider min={5} max={60} value={settings.longBreak} onChange={(_, v) => handleSliderChange('longBreak', v as number)} sx={{ mb: 3 }} />
-          <Typography sx={{ color: '#fff', mb: 1 }}>Long break interval: {settings.longBreakInterval} intervals</Typography>
-          <Slider min={1} max={8} value={settings.longBreakInterval} onChange={(_, v) => handleSliderChange('longBreakInterval', v as number)} sx={{ mb: 3 }} />
-          <Button variant="contained" onClick={handleSettingsClose} sx={{ mt: 2, background: '#fff', color: '#2980b9', fontWeight: 700 }}>Done</Button>
-        </Box>
-      </Drawer>
     </Box>
   );
 };
