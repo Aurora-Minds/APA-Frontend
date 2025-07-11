@@ -17,6 +17,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import BrightnessAutoIcon from '@mui/icons-material/BrightnessAuto';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import TimerIcon from '@mui/icons-material/Timer';
+import ScienceIcon from '@mui/icons-material/Science';
 import { useColorMode } from '../theme/ColorModeContext';
 
 const Sidebar: React.FC = () => {
@@ -42,6 +43,7 @@ const Sidebar: React.FC = () => {
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
         { text: 'Tasks', icon: <AssignmentIcon />, path: '/tasks' },
         { text: 'Focus Timer', icon: <TimerIcon />, path: '/focus-timer' },
+        { text: 'Lab Assistant', icon: <ScienceIcon />, path: '/lab-assistant' },
     ];
     const accountMenu = [
         { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
