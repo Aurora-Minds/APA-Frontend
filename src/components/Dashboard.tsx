@@ -89,6 +89,12 @@ interface FormData {
     subject: string;
 }
 
+interface LeaderboardUser {
+    _id: string;
+    name: string;
+    xp: number;
+}
+
 const StyledGrid = styled(Grid)(({ theme }: { theme: Theme }) => ({
     // Add any custom styles here if needed
 }));
@@ -536,18 +542,8 @@ const XPBar: React.FC<{ xp: number }> = ({ xp }) => {
   );
 };
 
-// Mock leaderboard data
-const mockLeaderboard = [
-  { id: '2', name: 'Blaze', xp: 95 },
-  { id: '3', name: 'Celeste', xp: 80 },
-  { id: '4', name: 'Dusk', xp: 60 },
-  { id: '5', name: 'Echo', xp: 45 },
-  { id: '6', name: 'Frost', xp: 30 },
-  { id: '7', name: 'Gale', xp: 20 },
-];
-
 // Leaderboard component
-const Leaderboard: React.FC<{ users: { id: string, name: string, xp: number }[], currentUserName: string }> = ({ users, currentUserName }) => {
+const Leaderboard: React.FC<{ users: LeaderboardUser[], currentUserName: string }> = ({ users, currentUserName }) => {
   // Sort by XP descending
   const sorted = [...users].sort((a, b) => b.xp - a.xp);
   // Calculate level for each user
@@ -597,7 +593,7 @@ const Leaderboard: React.FC<{ users: { id: string, name: string, xp: number }[],
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 1 }}>Leaderboard</Typography>
         <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', width: '100%' }}>
           {withLevel.map((u, i) => (
-            <Box key={u.id} sx={{ display: 'flex', alignItems: 'center', mb: 1.5, p: 1.2, borderRadius: 2, background: u.name === currentUserName ? 'rgba(33,150,243,0.18)' : 'transparent', fontWeight: u.name === currentUserName ? 700 : 500, boxShadow: u.name === currentUserName ? '0 2px 8px #2196f355' : 'none' }}>
+            <Box key={u._id} sx={{ display: 'flex', alignItems: 'center', mb: 1.5, p: 1.2, borderRadius: 2, background: u.name === currentUserName ? 'rgba(33,150,243,0.18)' : 'transparent', fontWeight: u.name === currentUserName ? 700 : 500, boxShadow: u.name === currentUserName ? '0 2px 8px #2196f355' : 'none' }}>
               <Box sx={{ width: 28, minWidth: 28, textAlign: 'right', pl: 0.5, mr: 1, fontFamily: 'monospace', color: i === 0 ? '#ffd700' : '#90caf9', fontWeight: 700 }}>{i + 1}</Box>
               <Box sx={{ flex: 1, color: u.name === currentUserName ? '#90caf9' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</Box>
               <Box sx={{ minWidth: 44, textAlign: 'right', color: '#4fc3f7', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Lv. {u.level}</Box>
@@ -661,6 +657,7 @@ const Dashboard: React.FC = () => {
     const { userPref, setTheme } = useColorMode();
     // Track completed tasks in this session to prevent double XP
     const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
+    const [leaderboardUsers, setLeaderboardUsers] = useState<LeaderboardUser[]>([]);
 
     const navigate = useNavigate();
     const theme = useTheme();
@@ -674,6 +671,7 @@ const Dashboard: React.FC = () => {
 
     useEffect(() => {
         fetchTasks();
+        fetchLeaderboard();
     }, []);
 
     useEffect(() => {
@@ -736,6 +734,15 @@ const Dashboard: React.FC = () => {
             const completedCount = allTasks.filter(t => t.status === 'completed').length;
         } catch (err) {
             console.error('Error fetching tasks:', err);
+        }
+    };
+
+    const fetchLeaderboard = async () => {
+        try {
+            const res = await axios.get<LeaderboardUser[]>(`${API_BASE_URL}/leaderboard`);
+            setLeaderboardUsers(res.data);
+        } catch (err) {
+            console.error('Error fetching leaderboard:', err);
         }
     };
 
@@ -1100,7 +1107,7 @@ const Dashboard: React.FC = () => {
                     />
                   </Grid>
                   <Grid item xs={12} md={2} sx={{ display: 'flex', alignItems: 'stretch' }}>
-                    <Leaderboard users={[{ id: '1', name: user?.name || 'Aphrodi', xp: user?.xp || 0 }, ...mockLeaderboard]} currentUserName={user?.name || ''} />
+                    <Leaderboard users={leaderboardUsers} currentUserName={user?.name || ''} />
                   </Grid>
                 </Grid>
                 {/* Quick Add Task */}
@@ -1215,7 +1222,6 @@ const Dashboard: React.FC = () => {
                                         color: '#fff',
                                         fontWeight: 700,
                                         mr: 1,
-                                        minWidth: 70,
                                         borderRadius: 1,
                                     }}
                                 />
@@ -1247,7 +1253,6 @@ const Dashboard: React.FC = () => {
                                         color: '#fff',
                                         fontWeight: 700,
                                         mr: 1,
-                                        minWidth: 70,
                                         borderRadius: 1,
                                     }}
                                 />
