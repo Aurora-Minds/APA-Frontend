@@ -8,6 +8,7 @@ import AllTasks from './components/AllTasks';
 import MainLayout from './components/MainLayout';
 import { ColorModeProvider, useColorMode } from './theme/ColorModeContext';
 import FocusTimer from './components/FocusTimer';
+import AIAssistant from './components/AIAssistant';
 import { CircularProgress, Box, ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -75,6 +76,16 @@ const App: React.FC = () => {
             <PrivateRoute>
               <MainLayout>
                 <FocusTimer />
+              </MainLayout>
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/lab-assistant" 
+          element={
+            <PrivateRoute>
+              <MainLayout>
+                <AIAssistant />
               </MainLayout>
             </PrivateRoute>
           } 
