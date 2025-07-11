@@ -58,7 +58,7 @@ const subjectColors: Record<string, string> = {
 const AllTasks: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [deletingId, setDeletingId] = useState<string | null>(null);
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const theme = useTheme();
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editTask, setEditTask] = useState<Task | null>(null);
@@ -116,6 +116,7 @@ const AllTasks: React.FC = () => {
                 status: task.status === 'completed' ? 'pending' : 'completed',
             });
             fetchTasks();
+            refreshUser();
         } catch (err) {
             console.error('Error updating task:', err);
         }

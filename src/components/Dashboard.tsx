@@ -637,7 +637,7 @@ const Dashboard: React.FC = () => {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [subjectAnchorEl, setSubjectAnchorEl] = useState<null | HTMLElement>(null);
     const [avatarMenuAnchor, setAvatarMenuAnchor] = useState<null | HTMLElement>(null);
-    const { user, logout } = useAuth();
+    const { user, logout, refreshUser } = useAuth();
     const [accountDialogOpen, setAccountDialogOpen] = useState(false);
     const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
     // Persist timer duration in localStorage
@@ -650,7 +650,6 @@ const Dashboard: React.FC = () => {
     const [isRunning, setIsRunning] = useState(false);
     const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
     const [focusHistory, setFocusHistory] = useState<{ taskId: string, seconds: number, date: string }[]>([]);
-    const [xp, setXp] = useState(0); // XP tracking
     const [currentTime, setCurrentTime] = useState(new Date());
     const [priorityAnchorEl, setPriorityAnchorEl] = useState<null | HTMLElement>(null);
     const [editPriorityAnchorEl, setEditPriorityAnchorEl] = useState<null | HTMLElement>(null);
@@ -686,14 +685,26 @@ const Dashboard: React.FC = () => {
             clearInterval(intervalId);
         } else if (timer === 0 && focusTaskId) {
             // Log focus session
-            setFocusHistory(h => [...h, { taskId: focusTaskId, seconds: timerDuration * 60, date: new Date().toISOString() }]);
-            setXp(xp => xp + 1); // 1 XP per completed session
+            const logSession = async () => {
+                try {
+                    await axios.post(`${API_BASE_URL}/focus-sessions`, {
+                        taskId: focusTaskId,
+                        duration: timerDuration * 60,
+                        startedAt: new Date(Date.now() - timerDuration * 60 * 1000).toISOString(),
+                        endedAt: new Date().toISOString(),
+                        status: 'completed',
+                    });
+                    refreshUser(); // Refresh user to get updated XP
+                } catch (err) {
+                    console.error('Error logging focus session:', err);
+                }
+            };
+            logSession();
             // Mark task as completed if not already
             const task = tasks.find(t => t._id === focusTaskId);
             if (task && task.status !== 'completed') {
               handleComplete(task);
             }
-            setIsRunning(false);
         }
         // eslint-disable-next-line
     }, [isRunning, timer]);
@@ -727,7 +738,6 @@ const Dashboard: React.FC = () => {
             // Recalculate XP: +1 for every task, +10 for every completed task
             const allTasks = res.data;
             const completedCount = allTasks.filter(t => t.status === 'completed').length;
-            setXp(allTasks.length * 1 + completedCount * 10);
         } catch (err) {
             console.error('Error fetching tasks:', err);
         }
@@ -850,6 +860,9 @@ const Dashboard: React.FC = () => {
             const isCompleting = task.status !== 'completed';
             await axios.put(`${API_BASE_URL}/tasks/${task._id}`, { ...task, status: isCompleting ? 'completed' : 'pending' });
             fetchTasks();
+            if (isCompleting) {
+                refreshUser();
+            }
         } catch (err) {
             console.error('Error updating task:', err);
         }
@@ -1066,7 +1079,7 @@ const Dashboard: React.FC = () => {
             <Grid item xs sx={{ p: 4 }}>
                 {/* XP Bar at the top right of the existing header */}
                 <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%', mb: 1, mt: -2, ml: -10 }}>
-                  <XPBar xp={xp} />
+                  <XPBar xp={user?.xp || 0} />
                 </Box>
                 {/* Welcome and Focus Timer Panel Row */}
                 <Grid container spacing={3} sx={{ mb: 3, alignItems: 'stretch', maxWidth: '100%' }}>
@@ -1082,7 +1095,7 @@ const Dashboard: React.FC = () => {
                       onPause={handlePause}
                       onReset={handleReset}
                       tasks={[...todaysTasks, ...upcomingTasks]}
-                      xp={xp}
+                      xp={user?.xp || 0}
                       onDurationChange={handlePomodoroDurationChange}
                       selectedTaskId={focusTaskId || ''}
                       onTaskChange={handlePomodoroTaskChange}
@@ -1091,7 +1104,7 @@ const Dashboard: React.FC = () => {
                     />
                   </Grid>
                   <Grid item xs={12} md={2} sx={{ display: 'flex', alignItems: 'stretch' }}>
-                    <Leaderboard users={[{ id: '1', name: user?.name || 'Aphrodi', xp }, ...mockLeaderboard]} currentUserName={user?.name || ''} />
+                    <Leaderboard users={[{ id: '1', name: user?.name || 'Aphrodi', xp: user?.xp || 0 }, ...mockLeaderboard]} currentUserName={user?.name || ''} />
                   </Grid>
                 </Grid>
                 {/* Quick Add Task */}
