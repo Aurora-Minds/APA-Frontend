@@ -700,11 +700,7 @@ const Dashboard: React.FC = () => {
                 }
             };
             logSession();
-            // Mark task as completed if not already
-            const task = tasks.find(t => t._id === focusTaskId);
-            if (task && task.status !== 'completed') {
-              handleComplete(task);
-            }
+            
         }
         // eslint-disable-next-line
     }, [isRunning, timer]);
