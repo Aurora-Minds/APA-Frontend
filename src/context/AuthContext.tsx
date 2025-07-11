@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import axios from 'axios';
 import { User, UserResponse } from '../types';
 
@@ -10,6 +10,7 @@ interface AuthContextType {
     setTheme: (theme: 'light' | 'dark' | 'system') => void;
     isAuthenticated: boolean;
     loading: boolean;
+    refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,27 +32,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const loadUser = async () => {
-            const token = localStorage.getItem('token');
-            if (token) {
-                axios.defaults.headers.common['x-auth-token'] = token;
-                try {
-                    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
-                    const res = await axios.get<{ user: User }>(`${API_BASE_URL}/auth`);
-                    setUser(res.data.user);
-                    setIsAuthenticated(true);
-                } catch (err) {
-                    localStorage.removeItem('token');
-                    setUser(null);
-                    setIsAuthenticated(false);
-                    delete axios.defaults.headers.common['x-auth-token'];
-                }
+    const loadUser = useCallback(async () => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            axios.defaults.headers.common['x-auth-token'] = token;
+            try {
+                const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
+                const res = await axios.get<{ user: User }>(`${API_BASE_URL}/auth`);
+                setUser(res.data.user);
+                setIsAuthenticated(true);
+            } catch (err) {
+                localStorage.removeItem('token');
+                setUser(null);
+                setIsAuthenticated(false);
+                delete axios.defaults.headers.common['x-auth-token'];
             }
-            setLoading(false);
-        };
-        loadUser();
+        }
+        setLoading(false);
     }, []);
+
+    useEffect(() => {
+        loadUser();
+    }, [loadUser]);
 
     const login = async (formData: any) => {
         const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
@@ -92,8 +94,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
+    const refreshUser = useCallback(async () => {
+        try {
+            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
+            const res = await axios.get<{ user: User }>(`${API_BASE_URL}/auth`);
+            setUser(res.data.user);
+        } catch (err) {
+            console.error('Failed to refresh user', err);
+        }
+    }, []);
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, setTheme, isAuthenticated, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, setTheme, isAuthenticated, loading, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );
