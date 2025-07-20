@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Paper, TextField, Button, List, ListItem, ListItemText, CircularProgress, IconButton } from '@mui/material';
-import { Send as SendIcon } from '@mui/icons-material';
+import { Send as SendIcon, Attachment as AttachmentIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
@@ -67,6 +67,37 @@ const AIAssistant: React.FC = () => {
         }
     };
 
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setLoading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        if (selectedChat) {
+            formData.append('chatId', selectedChat._id);
+        }
+
+        try {
+            const res = await axios.post<Chat>(`${API_BASE_URL}/ai/chat/upload`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            if (selectedChat) {
+                setSelectedChat(res.data);
+                setChats(chats.map(c => c._id === res.data._id ? res.data : c));
+            } else {
+                setChats([res.data, ...chats]);
+                setSelectedChat(res.data);
+            }
+        } catch (err) {
+            console.error('Error uploading file:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSendMessage = async () => {
         if (!newMessage.trim() || !selectedChat) return;
 
@@ -124,6 +155,18 @@ const AIAssistant: React.FC = () => {
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (selectedChat ? handleSendMessage() : handleNewChat())}
                     />
+                    <input
+                        type="file"
+                        accept=".pdf"
+                        style={{ display: 'none' }}
+                        id="file-upload"
+                        onChange={handleFileUpload}
+                    />
+                    <label htmlFor="file-upload">
+                        <IconButton component="span" color="primary" disabled={loading}>
+                            <AttachmentIcon />
+                        </IconButton>
+                    </label>
                     <Button
                         variant="contained"
                         color="primary"
