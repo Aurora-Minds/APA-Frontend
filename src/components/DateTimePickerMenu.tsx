@@ -44,13 +44,14 @@ const DateTimePickerMenu: React.FC<DateTimePickerMenuProps> = ({ label = 'Due Da
         onClick={handleOpen}
         sx={{
           minWidth: 150,
-          bgcolor: 'white',
-          color: '#1976d2',
-          borderColor: '#1976d2',
+          height: 40,
           fontWeight: 600,
-          textTransform: 'none',
+          color: '#fff',
+          borderColor: '#90caf9',
+          bgcolor: 'rgba(255,255,255,0.06)',
           boxShadow: 'none',
-          '&:hover': { bgcolor: '#e3f2fd' },
+          textTransform: 'none',
+          '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
           ...sx,
         }}
       >

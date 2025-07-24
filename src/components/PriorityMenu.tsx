@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, MenuItem, ListItemIcon, ListItemText, IconButton, Button } from '@mui/material';
 import FlagIcon from '@mui/icons-material/Flag';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useTheme } from '@mui/material/styles';
 
 export type Priority = 'high' | 'medium' | 'low' | 'none';
@@ -16,7 +17,7 @@ interface PriorityMenuProps {
   anchorEl: null | HTMLElement;
   open: boolean;
   onClose: () => void;
-  value: Priority;
+  value: Priority | null;
   onChange: (priority: Priority) => void;
 }
 
@@ -38,7 +39,7 @@ const PriorityMenu: React.FC<PriorityMenuProps> = ({ anchorEl, open, onClose, va
 );
 
 interface PriorityMenuButtonProps {
-  value: Priority;
+  value: Priority | null;
   onClick: (e: React.MouseEvent<HTMLElement>) => void;
   sx?: any;
 }
@@ -46,24 +47,33 @@ interface PriorityMenuButtonProps {
 export const PriorityMenuButton: React.FC<PriorityMenuButtonProps> = ({ value, onClick, sx }) => {
   const theme = useTheme();
   const color = value === 'high' ? '#e57373' : value === 'medium' ? '#ffd54f' : value === 'low' ? '#64b5f6' : '#bdbdbd';
+  
+  // Show "Priority" only when value is null/undefined, otherwise show the actual value
+  const displayText = !value ? 'Priority' : value.charAt(0).toUpperCase() + value.slice(1);
+  
+  // Show flag only when a value is explicitly selected (including 'none')
+  const showFlag = value !== null && value !== undefined;
+  
   return (
     <Button
       variant="outlined"
-      startIcon={<FlagIcon sx={{ color }} />}
+      startIcon={showFlag ? <FlagIcon sx={{ color }} /> : undefined}
+      endIcon={<KeyboardArrowDownIcon sx={{ color: '#fff' }} />}
       onClick={onClick}
       sx={{
         minWidth: 110,
-        bgcolor: 'white',
-        color: '#1976d2',
-        borderColor: '#1976d2',
+        height: 40,
         fontWeight: 600,
-        textTransform: 'none',
+        color: '#fff',
+        borderColor: '#90caf9',
+        bgcolor: 'rgba(255,255,255,0.06)',
         boxShadow: 'none',
-        '&:hover': { bgcolor: '#e3f2fd' },
+        textTransform: 'none',
+        '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
         ...sx,
       }}
     >
-      {value.charAt(0).toUpperCase() + value.slice(1)}
+      {displayText}
     </Button>
   );
 };
