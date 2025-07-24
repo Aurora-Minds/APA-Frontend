@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Container,
     Paper,
@@ -30,6 +30,7 @@ import {
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useTimer } from '../context/TimerContext';
 import { SelectChangeEvent } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -67,6 +68,9 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import WaterBg from '../assets/water-bg.jpg';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import LeaderboardBg from '../assets/leaderboard-bg.jpg';
+import QuickAddJellyfish from '../assets/quickadd-jellyfish.jpg';
+import SubjectIcon from '@mui/icons-material/Subject';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 interface Task {
     _id: string;
@@ -76,6 +80,7 @@ interface Task {
     priority: 'low' | 'medium' | 'high';
     status: 'pending' | 'in-progress' | 'completed';
     subject: string;
+    taskType?: 'lab' | 'assignment' | 'project';
 }
 
 type Status = 'pending' | 'in-progress' | 'completed';
@@ -157,16 +162,6 @@ const WelcomeCard: React.FC<{ userName?: string; quote: string; fullHeight?: boo
       <Typography variant="subtitle1" sx={{ opacity: 0.85 }}>Welcome back,</Typography>
       <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>{userName || 'User'}</Typography>
       <Typography sx={{ opacity: 0.85 }}>Glad to see you again!<br/>{quote}</Typography>
-      <Box sx={{ mt: 3 }}>
-        <Typography
-          sx={{ fontWeight: 600, opacity: 0.9, fontSize: 16, display: 'flex', alignItems: 'center', gap: 1, color: '#fff', cursor: 'pointer', textDecoration: 'none', '&:hover': { color: '#90caf9' } }}
-          onClick={onAddTaskClick}
-          tabIndex={0}
-          role="button"
-        >
-          Add your first task <span style={{ fontSize: 20, marginLeft: 4 }}>→</span>
-        </Typography>
-      </Box>
     </Box>
   </Paper>
 );
@@ -622,29 +617,35 @@ const Dashboard: React.FC = () => {
     });
     const [quickAddTitle, setQuickAddTitle] = useState('');
     const [quickAddDescription, setQuickAddDescription] = useState('');
+    const [quickAddReported, setQuickAddReported] = useState('');
+    const [quickAddAssignee, setQuickAddAssignee] = useState('');
+    const [quickAddTaskType, setQuickAddTaskType] = useState<'lab' | 'assignment' | 'project' | null>(null);
     const [quickAddSubject, setQuickAddSubject] = useState('');
     const [quickAddDate, setQuickAddDate] = useState('');
     const [quickAddTime, setQuickAddTime] = useState('');
-    const [quickAddPriority, setQuickAddPriority] = useState<Priority>('medium');
+    const [quickAddPriority, setQuickAddPriority] = useState<Priority | null>(null);
     const [subjectMenuOpen, setSubjectMenuOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editTask, setEditTask] = useState<Task | null>(null);
     const [editForm, setEditForm] = useState({ title: '', description: '', dueDate: '', priority: 'medium', status: 'pending', subject: '' });
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [subjectAnchorEl, setSubjectAnchorEl] = useState<null | HTMLElement>(null);
+    const [reportedAnchorEl, setQuickAddReportedAnchorEl] = useState<null | HTMLElement>(null);
+    const [assigneeAnchorEl, setQuickAddAssigneeAnchorEl] = useState<null | HTMLElement>(null);
     const [avatarMenuAnchor, setAvatarMenuAnchor] = useState<null | HTMLElement>(null);
     const { user, logout, refreshUser } = useAuth();
+    const { 
+      timer, 
+      timerDuration, 
+      isRunning, 
+      focusTaskId,
+      startTimer, 
+      pauseTimer, 
+      resetTimer, 
+      setTimerDuration, 
+      setFocusTaskId
+    } = useTimer();
     const [accountDialogOpen, setAccountDialogOpen] = useState(false);
-    const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
-    // Persist timer duration in localStorage
-    const getInitialDuration = () => {
-      const saved = localStorage.getItem('pomodoroDuration');
-      return saved ? parseInt(saved, 10) : 25;
-    };
-    const [timerDuration, setTimerDuration] = useState(getInitialDuration()); // in minutes, editable
-    const [timer, setTimer] = useState(getInitialDuration() * 60); // in seconds
-    const [isRunning, setIsRunning] = useState(false);
-    const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
     const [focusHistory, setFocusHistory] = useState<{ taskId: string, seconds: number, date: string }[]>([]);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [priorityAnchorEl, setPriorityAnchorEl] = useState<null | HTMLElement>(null);
@@ -674,34 +675,7 @@ const Dashboard: React.FC = () => {
         fetchLeaderboard();
     }, []);
 
-    useEffect(() => {
-        if (isRunning && timer > 0) {
-            const id = setInterval(() => setTimer(t => t - 1), 1000);
-            setIntervalId(id);
-            return () => clearInterval(id);
-        } else if (!isRunning && intervalId) {
-            clearInterval(intervalId);
-        } else if (timer === 0 && focusTaskId) {
-            // Log focus session
-            const logSession = async () => {
-                try {
-                    await axios.post(`${API_BASE_URL}/focus-sessions`, {
-                        taskId: focusTaskId,
-                        duration: timerDuration * 60,
-                        startedAt: new Date(Date.now() - timerDuration * 60 * 1000).toISOString(),
-                        endedAt: new Date().toISOString(),
-                        status: 'completed',
-                    });
-                    refreshUser(); // Refresh user to get updated XP
-                } catch (err) {
-                    console.error('Error logging focus session:', err);
-                }
-            };
-            logSession();
-            
-        }
-        // eslint-disable-next-line
-    }, [isRunning, timer]);
+
 
     useEffect(() => {
         const interval = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -713,9 +687,55 @@ const Dashboard: React.FC = () => {
             try {
                 setSubjectLoading(true);
                 const res = await axios.get(`${API_BASE_URL}/users/me/subjects`);
-                setSubjects((res.data as { subjects: string[] }).subjects || []);
+                const userSubjects = (res.data as { subjects: string[] }).subjects || [];
+                
+                // Always include professional subjects alongside user's existing subjects
+                const professionalSubjects = [
+                    'Project Management',
+                    'Client Communication',
+                    'Research & Analysis',
+                    'Content Creation',
+                    'Data Analysis',
+                    'Strategic Planning',
+                    'Team Collaboration',
+                    'Financial Planning',
+                    'Marketing Strategy',
+                    'Product Development',
+                    'Customer Support',
+                    'Quality Assurance',
+                    'Business Development',
+                    'Operations Management',
+                    'Human Resources',
+                    'Legal & Compliance',
+                    'Technology & IT',
+                    'Sales & Revenue',
+                    'Risk Management',
+                    'Innovation & R&D'
+                ];
+                
+                // Combine user subjects with professional subjects, removing duplicates
+                const highSchoolSubjects = ['English', 'Math', 'Science', 'History'];
+                const filteredUserSubjects = userSubjects.filter(subject => !highSchoolSubjects.includes(subject));
+                const allSubjects = [...filteredUserSubjects, ...professionalSubjects].filter((subject, index, array) => 
+                    array.indexOf(subject) === index
+                );
+                setSubjects(allSubjects);
             } catch (err) {
                 setSubjectError('Failed to load subjects');
+                // Fallback to professional subjects if API fails
+                const fallbackSubjects = [
+                    'Project Management',
+                    'Client Communication',
+                    'Research & Analysis',
+                    'Content Creation',
+                    'Data Analysis',
+                    'Strategic Planning',
+                    'Team Collaboration',
+                    'Financial Planning',
+                    'Marketing Strategy',
+                    'Product Development'
+                ];
+                setSubjects(fallbackSubjects);
             } finally {
                 setSubjectLoading(false);
             }
@@ -783,6 +803,9 @@ const Dashboard: React.FC = () => {
                 await axios.put(`${API_BASE_URL}/tasks/${editingTask._id}`, formData);
             } else {
                 await axios.post(`${API_BASE_URL}/tasks`, formData);
+                // Award XP based on priority: None=5, Low=10, Medium=15, High=20
+                // The backend will handle XP calculation based on priority
+                refreshUser();
             }
             fetchTasks();
             handleClose();
@@ -821,30 +844,58 @@ const Dashboard: React.FC = () => {
             alert('Task subject is required.');
             return;
         }
+        if (!quickAddTaskType) {
+            alert('Please select a task type (Lab, Assignment, or Project).');
+            return;
+        }
         let dueDate = quickAddDate;
+        console.log('quickAddDate value:', quickAddDate);
         if (!dueDate) {
             const today = new Date();
-            dueDate = today.toISOString().split('T')[0];
+            dueDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+            console.log('No date set, using today:', dueDate);
         }
+        
+        // Add time to the due date if it's set
         if (quickAddTime) {
-            dueDate += 'T' + quickAddTime;
+            dueDate = dueDate + 'T' + quickAddTime + ':00';
+        }
+        
+        // Only adjust date for timezone if no time is set (midnight default)
+        if (dueDate === todayStr && !quickAddTime) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            dueDate = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
         }
         const dataToSend = {
             title: quickAddTitle,
             subject: quickAddSubject,
             description: quickAddDescription,
+            taskType: quickAddTaskType,
+            reported: quickAddReported,
+            assignee: quickAddAssignee,
             dueDate,
             priority: quickAddPriority,
             status: 'pending',
         };
+        console.log('Sending task data:', dataToSend);
+        console.log('Due date being sent:', dueDate);
+        console.log('Current local date:', new Date().toLocaleDateString());
+        console.log('Today string for comparison:', todayStr);
         try {
             await axios.post(`${API_BASE_URL}/tasks`, dataToSend);
+            // Award XP based on priority: None=5, Low=10, Medium=15, High=20
+            // The backend will handle XP calculation based on priority
+            refreshUser();
             setQuickAddTitle('');
             setQuickAddSubject('');
             setQuickAddDescription('');
+            setQuickAddReported('');
+            setQuickAddAssignee('');
             setQuickAddDate('');
             setQuickAddTime('');
-            setQuickAddPriority('medium');
+            setQuickAddPriority(null);
+            setQuickAddTaskType(null);
             fetchTasks();
         } catch (err) {
             if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'errors' in err.response.data && Array.isArray(err.response.data.errors)) {
@@ -904,12 +955,16 @@ const Dashboard: React.FC = () => {
 
     // Quick add chip handlers
     const setToday = () => {
-        setQuickAddDate(new Date().toISOString().split('T')[0]);
+        const today = new Date();
+        const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        console.log('setToday called, setting date to:', todayStr);
+        setQuickAddDate(todayStr);
     };
     const setTomorrow = () => {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
-        setQuickAddDate(tomorrow.toISOString().split('T')[0]);
+        const tomorrowStr = tomorrow.getFullYear() + '-' + String(tomorrow.getMonth() + 1).padStart(2, '0') + '-' + String(tomorrow.getDate()).padStart(2, '0');
+        setQuickAddDate(tomorrowStr);
     };
     const handleCustomDate = (e: React.ChangeEvent<HTMLInputElement>) => {
         setQuickAddDate(e.target.value);
@@ -919,14 +974,54 @@ const Dashboard: React.FC = () => {
     };
 
     // Filter and sort tasks
-    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
     const priorityOrder = { high: 0, medium: 1, low: 2 };
+    
+    console.log('Today string:', todayStr);
+    console.log('All tasks:', tasks);
+    console.log('Task types:', tasks.map(t => ({ title: t.title, taskType: t.taskType })));
+    console.log('Total tasks before filtering:', tasks.length);
+    
     const todaysTasks = tasks
-        .filter(task => task.dueDate && task.dueDate.split('T')[0] === todayStr && task.status !== 'completed')
+        .filter(task => {
+            if (!task.dueDate || task.status === 'completed') return false;
+            // Extract just the date part from the due date
+            let taskDateStr;
+            if (task.dueDate.includes('T')) {
+                // New format: "2025-07-23T11:00:00.000Z" -> extract "2025-07-23"
+                taskDateStr = task.dueDate.split('T')[0];
+            } else {
+                // Old format: "2025-07-23"
+                taskDateStr = task.dueDate;
+            }
+            console.log(`Task "${task.title}": dueDate=${task.dueDate}, taskDateStr=${taskDateStr}, todayStr=${todayStr}, isToday=${taskDateStr === todayStr}`);
+            return taskDateStr === todayStr;
+        })
         .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    
+    console.log('Today\'s tasks count:', todaysTasks.length);
+    console.log('Today\'s tasks:', todaysTasks.map(t => t.title));
+    
     const upcomingTasks = tasks
-        .filter(task => task.dueDate && task.dueDate.split('T')[0] > todayStr && task.status !== 'completed')
+        .filter(task => {
+            if (!task.dueDate || task.status === 'completed') return false;
+            // Extract just the date part from the due date
+            let taskDateStr;
+            if (task.dueDate.includes('T')) {
+                // New format: "2025-07-23T11:00:00.000Z" -> extract "2025-07-23"
+                taskDateStr = task.dueDate.split('T')[0];
+            } else {
+                // Old format: "2025-07-23"
+                taskDateStr = task.dueDate;
+            }
+            // Include today's tasks in upcoming as well (so they appear in both sections)
+            return taskDateStr >= todayStr;
+        })
         .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    
+    console.log('Upcoming tasks count:', upcomingTasks.length);
+    console.log('Upcoming tasks:', upcomingTasks.map(t => t.title));
 
     // Subject dropdown handlers
     const handleSubjectClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -938,6 +1033,30 @@ const Dashboard: React.FC = () => {
     };
     const handleSubjectClose = () => {
         setSubjectAnchorEl(null);
+    };
+
+    const handleReportedClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setQuickAddReported(''); // Clear selected value
+        setQuickAddReportedAnchorEl(event.currentTarget);
+    };
+    const handleReportedSelect = (reported: string) => {
+        setQuickAddReported(reported);
+        setQuickAddReportedAnchorEl(null);
+    };
+    const handleReportedClose = () => {
+        setQuickAddReportedAnchorEl(null);
+    };
+
+    const handleAssigneeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setQuickAddAssignee(''); // Clear selected value
+        setQuickAddAssigneeAnchorEl(event.currentTarget);
+    };
+    const handleAssigneeSelect = (assignee: string) => {
+        setQuickAddAssignee(assignee);
+        setQuickAddAssigneeAnchorEl(null);
+    };
+    const handleAssigneeClose = () => {
+        setQuickAddAssigneeAnchorEl(null);
     };
 
     const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -958,19 +1077,43 @@ const Dashboard: React.FC = () => {
         logout();
     };
 
-    const handleStart = () => setIsRunning(true);
-    const handlePause = () => setIsRunning(false);
-    const handleReset = () => { setIsRunning(false); setTimer(timerDuration * 60); };
-    const handleFocusTaskChange = (e: any) => { setFocusTaskId(e.target.value); setTimer(timerDuration * 60); setIsRunning(false); };
+    const handleStart = () => startTimer();
+    const handlePause = () => pauseTimer();
+    const handleReset = () => resetTimer();
+    const handleFocusTaskChange = (e: any) => { setFocusTaskId(e.target.value); };
     const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = Math.max(1, parseInt(e.target.value) || 1); // minimum 1 minute
         setTimerDuration(value);
-        setTimer(value * 60);
-        setIsRunning(false);
     };
     const focusTask = tasks.find(t => t._id === focusTaskId);
     const minutes = Math.floor(timer / 60).toString().padStart(2, '0');
     const seconds = (timer % 60).toString().padStart(2, '0');
+
+    // Memoize the combined tasks to prevent unnecessary updates
+    const allTasks = useMemo(() => [...todaysTasks, ...upcomingTasks], [todaysTasks, upcomingTasks]);
+
+    // Handle timer completion and task completion
+    useEffect(() => {
+        if (timer === 0 && focusTaskId) {
+            const completeTask = async () => {
+                try {
+                    // Automatically complete the focused task
+                    const focusedTask = allTasks.find(t => t._id === focusTaskId);
+                    if (focusedTask && focusedTask.status !== 'completed') {
+                        await axios.put(`${API_BASE_URL}/tasks/${focusTaskId}`, { 
+                            ...focusedTask, 
+                            status: 'completed' 
+                        });
+                        fetchTasks(); // Refresh tasks to show the completed status
+                        refreshUser(); // Refresh user to get updated XP
+                    }
+                } catch (err) {
+                    console.error('Error completing task:', err);
+                }
+            };
+            completeTask();
+        }
+    }, [timer, focusTaskId, allTasks, API_BASE_URL]);
 
     // Greeting based on time
     const hour = currentTime.getHours();
@@ -990,19 +1133,19 @@ const Dashboard: React.FC = () => {
         if (!dueDate) return '';
         const date = new Date(dueDate);
         if (isNaN(date.getTime())) return '';
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        // Convert to 12-hour format with AM/PM
+        const hours = date.getUTCHours();
+        const minutes = date.getUTCMinutes();
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+        return `${displayHours}:${minutes.toString().padStart(2, '0')}${period}`;
     };
     const getTaskDate = (dueDate: string) => {
         if (!dueDate) return '';
+        
+        // Always show the actual date
         const due = new Date(dueDate);
-        if (isNaN(due.getTime())) return '';
-        // Use UTC for date comparison
-        const todayLocal = new Date();
-        todayLocal.setUTCHours(0, 0, 0, 0);
-        const tomorrowUtc = new Date(todayLocal);
-        tomorrowUtc.setUTCDate(todayLocal.getUTCDate() + 1);
-        const dueDayUtc = new Date(Date.UTC(due.getUTCFullYear(), due.getUTCMonth(), due.getUTCDate()));
-        if (dueDayUtc.getTime() === tomorrowUtc.getTime()) return 'Tomorrow';
         return due.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
     };
 
@@ -1059,8 +1202,6 @@ const Dashboard: React.FC = () => {
 
     const handlePomodoroDurationChange = (value: number) => {
         setTimerDuration(value);
-        setTimer(value * 60);
-        setIsRunning(false);
         localStorage.setItem('pomodoroDuration', value.toString());
     };
 
@@ -1078,267 +1219,759 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <Grid container sx={{ minHeight: '100vh', bgcolor: 'transparent', overflowX: 'hidden' }}>
-            <Grid item xs sx={{ p: 4 }}>
-                {/* XP Bar at the top right of the existing header */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%', mb: 1, mt: -2, ml: -10 }}>
-                  <XPBar xp={user?.xp || 0} />
-                </Box>
-                {/* Welcome and Focus Timer Panel Row */}
-                <Grid container spacing={3} sx={{ mb: 3, alignItems: 'stretch', maxWidth: '100%' }}>
-                  <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'stretch' }}>
+        <Box sx={{ minHeight: '100vh', bgcolor: 'transparent', overflowX: 'hidden', p: 4 }}>
+            {/* XP Bar */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%', mb: 1, mt: -2, ml: -10 }}>
+                <XPBar xp={user?.xp || 0} />
+            </Box>
+            
+            {/* Welcome and Focus Timer Panel Row */}
+            <Grid container spacing={3} sx={{ mb: 3, alignItems: 'stretch', maxWidth: '100%' }}>
+                <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'stretch' }}>
                     <WelcomeCard userName={user?.name || 'User'} quote={quote} fullHeight fullWidth onAddTaskClick={scrollToQuickAdd} />
-                  </Grid>
-                  <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'stretch' }}>
-                    <FocusTimerCard
-                      timer={timer}
-                      timerDuration={timerDuration}
-                      isRunning={isRunning}
-                      onStart={handleStart}
-                      onPause={handlePause}
-                      onReset={handleReset}
-                      tasks={[...todaysTasks, ...upcomingTasks]}
-                      xp={user?.xp || 0}
-                      onDurationChange={handlePomodoroDurationChange}
-                      selectedTaskId={focusTaskId || ''}
-                      onTaskChange={handlePomodoroTaskChange}
-                      fullHeight
-                      fullWidth
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={2} sx={{ display: 'flex', alignItems: 'stretch' }}>
-                    <Leaderboard users={leaderboardUsers} currentUserName={user?.name || ''} />
-                  </Grid>
                 </Grid>
-                {/* Quick Add Task */}
-                <Paper sx={{ p: 2, mb: 3, borderRadius: 3, boxShadow: 2, background: theme.palette.mode === 'dark' ? 'linear-gradient(135deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)' : '#fff', color: theme.palette.mode === 'dark' ? '#fff' : '#222' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <input
-                                ref={quickAddInputRef}
-                                placeholder="Quick add task"
-                                style={{
-                                    border: 'none',
-                                    outline: 'none',
-                                    fontSize: 16,
-                                    width: '100%',
-                                    background: 'transparent',
-                                    color: 'inherit'
-                                }}
-                                value={quickAddTitle}
-                                onChange={e => setQuickAddTitle(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd(); }}
-                            />
-                            <TextField
-                                placeholder="Description"
-                                size="small"
-                                value={quickAddDescription}
-                                onChange={e => setQuickAddDescription(e.target.value)}
-                                sx={{ bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'white', borderRadius: 1 }}
-                            />
-                        </Box>
-                        <IconButton color="primary" onClick={handleQuickAdd} sx={{ alignSelf: 'flex-start', mt: 0.5 }}>
-                            <AddIcon />
-                        </IconButton>
-                        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                            <Button
-                                variant="outlined"
-                                onClick={handleSubjectClick}
-                                sx={{
-                                    fontWeight: 600,
-                                    color: '#1976d2',
-                                    borderColor: '#1976d2',
-                                    bgcolor: 'white',
-                                    boxShadow: 'none',
-                                    textTransform: 'none',
-                                    '&:hover': { bgcolor: '#e3f2fd' },
-                                    minWidth: 150,
-                                    mr: 1,
-                                }}
-                            >
-                                {quickAddSubject || 'Subject'}
-                            </Button>
-                            <Menu anchorEl={subjectAnchorEl} open={Boolean(subjectAnchorEl)} onClose={handleSubjectClose}>
-                                <Box sx={{ p: 2, minWidth: 220 }}>
-                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Subjects</Typography>
-                                    {subjects.map(subj => (
-                                        <Box key={subj} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                            <MenuItem onClick={() => handleSubjectSelect(subj)} sx={{ flex: 1 }}>{subj}</MenuItem>
-                                            <IconButton size="small" onClick={() => handleDeleteSubject(subj)} disabled={isSubjectInUse(subj)}>
-                                                <DeleteIcon fontSize="small" color={isSubjectInUse(subj) ? 'disabled' : 'error'} />
-                                            </IconButton>
-                                        </Box>
-                                    ))}
-                                    <Box sx={{ display: 'flex', mt: 1 }}>
-                                        <TextField
-                                            size="small"
-                                            placeholder="Add subject"
-                                            value={newSubject}
-                                            onChange={e => setNewSubject(e.target.value)}
-                                            onKeyDown={e => { if (e.key === 'Enter') handleAddSubject(); }}
-                                            sx={{ flex: 1, mr: 1 }}
-                                            disabled={subjectLoading}
-                                        />
-                                        <Button onClick={handleAddSubject} disabled={subjectLoading || !newSubject.trim()} variant="contained">Add</Button>
-                                    </Box>
-                                    {subjectError && <Typography color="error" variant="caption">{subjectError}</Typography>}
-                                </Box>
-                            </Menu>
-                            <DateTimePickerMenu
-                                value={quickAddDate + (quickAddTime ? 'T' + quickAddTime : '')}
-                                onChange={val => {
-                                    const [d, t] = val.split('T');
-                                    setQuickAddDate(d || '');
-                                    setQuickAddTime(t || '');
-                                }}
-                            />
-                            <PriorityMenuButton
-                                value={quickAddPriority}
-                                onClick={e => setPriorityAnchorEl(e.currentTarget)}
-                            />
-                            <PriorityMenu
-                                anchorEl={priorityAnchorEl}
-                                open={Boolean(priorityAnchorEl)}
-                                onClose={() => setPriorityAnchorEl(null)}
-                                value={quickAddPriority}
-                                onChange={p => setQuickAddPriority(p as Priority)}
-                            />
-                        </Box>
+                <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'stretch' }}>
+                    <FocusTimerCard
+                        timer={timer}
+                        timerDuration={timerDuration}
+                        isRunning={isRunning}
+                        onStart={handleStart}
+                        onPause={handlePause}
+                        onReset={handleReset}
+                        tasks={allTasks}
+                        xp={user?.xp || 0}
+                        onDurationChange={handlePomodoroDurationChange}
+                        selectedTaskId={focusTaskId || ''}
+                        onTaskChange={handlePomodoroTaskChange}
+                        fullHeight
+                        fullWidth
+                    />
+                </Grid>
+                <Grid item xs={12} md={2} sx={{ display: 'flex', alignItems: 'stretch' }}>
+                    <Leaderboard users={leaderboardUsers} currentUserName={user?.name || ''} />
+                </Grid>
+            </Grid>
+
+            {/* Quick Add Task */}
+            <Paper
+                sx={{
+                    width: { xs: '100%', md: 2000 },
+                    minHeight: 280,
+                    maxWidth: '82%',
+                    mx: 0,
+                    my: 3,
+                    p: 3,
+                    borderRadius: 5,
+                    boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'none',
+                    color: '#fff',
+                    border: '1.5px solid rgba(255,255,255,0.12)',
+                    backdropFilter: 'blur(12px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                }}
+            >
+                {/* Background image */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: `url(${QuickAddJellyfish})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        zIndex: 1,
+                    }}
+                />
+                {/* Glassy Overlay */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        bgcolor: 'rgba(17,25,40,0.55)',
+                        zIndex: 2,
+                        borderRadius: 5,
+                        pointerEvents: 'none',
+                    }}
+                />
+                <Box sx={{ position: 'relative', zIndex: 3 }}>
+                    <Typography
+                        sx={{
+                            fontWeight: 600,
+                            opacity: 0.9,
+                            fontSize: 18,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            color: '#fff',
+                            mb: 2,
+                            textAlign: 'left',
+                            justifyContent: 'flex-start',
+                            pl: 1,
+                        }}
+                    >
+                        Add your task
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                        <TextField
+                            inputRef={quickAddInputRef}
+                            placeholder="Task Title"
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                                width: '40%',
+                                '& .MuiOutlinedInput-root': {
+                                    backgroundColor: 'rgba(255,255,255,0.25)',
+                                    borderRadius: 2,
+                                    '& fieldset': {
+                                        border: 'none',
+                                    },
+                                    '&:hover fieldset': {
+                                        border: 'none',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        border: 'none',
+                                    },
+                                    '& input': {
+                                        color: '#fff',
+                                        fontSize: 18,
+                                        '&::placeholder': {
+                                            color: '#e3f2fd',
+                                            opacity: 1,
+                                        },
+                                    },
+                                },
+                            }}
+                            value={quickAddTitle}
+                            onChange={e => setQuickAddTitle(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd(); }}
+                        />
+                        <TextField
+                            placeholder="Description"
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                                width: '40%',
+                                '& .MuiOutlinedInput-root': {
+                                    backgroundColor: 'rgba(255,255,255,0.25)',
+                                    borderRadius: 2,
+                                    '& fieldset': {
+                                        border: 'none',
+                                    },
+                                    '&:hover fieldset': {
+                                        border: 'none',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        border: 'none',
+                                    },
+                                    '& input': {
+                                        color: '#fff',
+                                        fontSize: 18,
+                                        '&::placeholder': {
+                                            color: '#e3f2fd',
+                                            opacity: 1,
+                                        },
+                                    },
+                                },
+                            }}
+                            value={quickAddDescription}
+                            onChange={e => setQuickAddDescription(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd(); }}
+                        />
                     </Box>
-                </Paper>
-                {/* Today's Tasks */}
-                <Typography variant="h6" sx={{ mb: 1 }}>Today's tasks</Typography>
-                <Paper sx={{ p: 2, mb: 3, borderRadius: 3, boxShadow: 1, background: theme.palette.mode === 'dark' ? 'linear-gradient(135deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)' : '#fff', color: theme.palette.mode === 'dark' ? '#fff' : '#222' }}>
+                    {/* Lab, Assignment, and Project buttons - First Row */}
+                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                        <Button
+                            variant="outlined"
+                            onClick={() => {
+                                console.log('Lab button clicked, current type:', quickAddTaskType);
+                                setQuickAddTaskType('lab');
+                            }}
+                            sx={{
+                                fontWeight: 600,
+                                color: '#fff',
+                                borderColor: quickAddTaskType === 'lab' ? '#90caf9' : '#90caf9',
+                                bgcolor: quickAddTaskType === 'lab' ? 'rgba(144, 202, 249, 0.3)' : 'rgba(255,255,255,0.06)',
+                                boxShadow: quickAddTaskType === 'lab' ? '0 0 8px rgba(144, 202, 249, 0.5)' : 'none',
+                                textTransform: 'none',
+                                '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
+                                width: 160,
+                                height: 45,
+                                fontSize: 12,
+                            }}
+                        >
+                            Lab
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            onClick={() => {
+                                console.log('Assignment button clicked, current type:', quickAddTaskType);
+                                setQuickAddTaskType('assignment');
+                            }}
+                            sx={{
+                                fontWeight: 600,
+                                color: '#fff',
+                                borderColor: quickAddTaskType === 'assignment' ? '#90caf9' : '#90caf9',
+                                bgcolor: quickAddTaskType === 'assignment' ? 'rgba(144, 202, 249, 0.3)' : 'rgba(255,255,255,0.06)',
+                                boxShadow: quickAddTaskType === 'assignment' ? '0 0 8px rgba(144, 202, 249, 0.5)' : 'none',
+                                textTransform: 'none',
+                                '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
+                                width: 160,
+                                height: 45,
+                                fontSize: 12,
+                            }}
+                        >
+                            Assignment
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            onClick={() => {
+                                console.log('Project button clicked, current type:', quickAddTaskType);
+                                setQuickAddTaskType('project');
+                            }}
+                            sx={{
+                                fontWeight: 600,
+                                color: '#fff',
+                                borderColor: quickAddTaskType === 'project' ? '#90caf9' : '#90caf9',
+                                bgcolor: quickAddTaskType === 'project' ? 'rgba(144, 202, 249, 0.3)' : 'rgba(255,255,255,0.06)',
+                                boxShadow: quickAddTaskType === 'project' ? '0 0 8px rgba(144, 202, 249, 0.5)' : 'none',
+                                textTransform: 'none',
+                                '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
+                                width: 160,
+                                height: 45,
+                                fontSize: 12,
+                            }}
+                        >
+                            Project
+                        </Button>
+                    </Box>
+                    
+                    {/* Course, Priority, and Due Date & Time buttons - Second Row */}
+                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                        <Button
+                            variant="outlined"
+                            onClick={handleSubjectClick}
+                            sx={{
+                                fontWeight: 600,
+                                color: '#fff',
+                                borderColor: '#90caf9',
+                                bgcolor: 'rgba(255,255,255,0.06)',
+                                boxShadow: 'none',
+                                textTransform: 'none',
+                                '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
+                                width: 160,
+                                height: 45,
+                                fontSize: 12,
+                            }}
+                        >
+                            {quickAddSubject || 'Course'}
+                            <KeyboardArrowDownIcon sx={{ ml: 0.5 }} />
+                        </Button>
+                        <PriorityMenuButton
+                            value={quickAddPriority}
+                            onClick={e => setPriorityAnchorEl(e.currentTarget)}
+                            sx={{ 
+                                width: 160,
+                                height: 45,
+                                fontSize: 12,
+                            }}
+                        />
+                        <DateTimePickerMenu
+                            value={quickAddDate + (quickAddTime ? 'T' + quickAddTime : '')}
+                            onChange={(value) => {
+                                if (value) {
+                                    const date = new Date(value);
+                                    setQuickAddDate(date.toISOString().split('T')[0]);
+                                    setQuickAddTime(date.toTimeString().slice(0, 5));
+                                }
+                            }}
+                            sx={{ 
+                                width: 160,
+                                height: 45,
+                                fontSize: 12,
+                                '& .MuiButton-root': {
+                                    width: '100%',
+                                    height: '100%',
+                                    fontSize: 12,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    padding: '6px 8px',
+                                }
+                            }}
+                        />
+                    </Box>
+                    
+                    {/* Create Task button - Third Row */}
+                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                        <Button
+                            variant="contained"
+                            onClick={() => {
+                                console.log('Create Task clicked with values:', {
+                                    title: quickAddTitle,
+                                    subject: quickAddSubject,
+                                    taskType: quickAddTaskType,
+                                    priority: quickAddPriority
+                                });
+                                handleQuickAdd();
+                            }}
+                            disabled={!quickAddTitle.trim() || !quickAddSubject.trim() || !quickAddTaskType}
+                            sx={{
+                                fontWeight: 700,
+                                color: '#fff',
+                                bgcolor: '#2196f3',
+                                borderColor: '#2196f3',
+                                boxShadow: '0 2px 8px #2196f355',
+                                textTransform: 'none',
+                                '&:hover': { bgcolor: '#1976d2' },
+                                '&:disabled': { 
+                                    bgcolor: 'rgba(255,255,255,0.1)', 
+                                    color: 'rgba(255,255,255,0.5)',
+                                    borderColor: 'rgba(255,255,255,0.2)'
+                                },
+                                width: 160,
+                                height: 45,
+                                fontSize: 12,
+                            }}
+                        >
+                            Create Task
+                        </Button>
+                    </Box>
+                </Box>
+                <PriorityMenu
+                    anchorEl={priorityAnchorEl}
+                    open={Boolean(priorityAnchorEl)}
+                    onClose={() => setPriorityAnchorEl(null)}
+                    value={quickAddPriority}
+                    onChange={(p: Priority) => setQuickAddPriority(p)}
+                />
+                <Menu
+                    anchorEl={subjectAnchorEl}
+                    open={Boolean(subjectAnchorEl)}
+                    onClose={handleSubjectClose}
+                >
+                    {subjects.map((subject) => (
+                        <MenuItem key={subject} onClick={() => handleSubjectSelect(subject)}>
+                            {subject}
+                        </MenuItem>
+                    ))}
+                    <Divider />
+                    <MenuItem onClick={() => setAccountDialogOpen(true)}>
+                        <AddIcon sx={{ mr: 1 }} />
+                        Add New Subject
+                    </MenuItem>
+                </Menu>
+
+
+
+            </Paper>
+
+            {/* Today's Tasks */}
+            <Paper
+                sx={{
+                    width: { xs: '100%', md: 2000 },
+                    minHeight: 200,
+                    maxWidth: '82%',
+                    mx: 0,
+                    my: 3,
+                    p: 3,
+                    borderRadius: 5,
+                    boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'none',
+                    color: '#fff',
+                    border: '1.5px solid rgba(255,255,255,0.12)',
+                    backdropFilter: 'blur(12px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                }}
+            >
+                {/* Glassy Overlay */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        bgcolor: 'rgba(17,25,40,0.55)',
+                        zIndex: 2,
+                        borderRadius: 5,
+                        pointerEvents: 'none',
+                    }}
+                />
+                <Box sx={{ position: 'relative', zIndex: 3 }}>
+                    <Typography
+                        sx={{
+                            fontWeight: 600,
+                            opacity: 0.9,
+                            fontSize: 18,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            color: '#fff',
+                            mb: 2,
+                            textAlign: 'left',
+                            justifyContent: 'flex-start',
+                            pl: 0,
+                        }}
+                    >
+                        Today's tasks
+                    </Typography>
+                    
+                    {/* Column Headers */}
+                    {todaysTasks.length > 0 && (
+                        <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            mb: 2, 
+                            p: 2, 
+                            borderRadius: 2, 
+                            bgcolor: 'rgba(255,255,255,0.12)',
+                            borderBottom: '1px solid rgba(255,255,255,0.2)'
+                        }}>
+                            <Typography sx={{ 
+                                fontWeight: 600, 
+                                color: '#e3f2fd', 
+                                width: '20%',
+                                fontSize: 14
+                            }}>
+                                Course
+                            </Typography>
+                            <Typography sx={{ 
+                                fontWeight: 600, 
+                                color: '#e3f2fd', 
+                                flexGrow: 1,
+                                fontSize: 14,
+                                pl: 6
+                            }}>
+                                Task Name
+                            </Typography>
+                            <Typography sx={{ 
+                                fontWeight: 600, 
+                                color: '#e3f2fd', 
+                                width: '12%',
+                                fontSize: 14
+                            }}>
+                                Category
+                            </Typography>
+                            <Typography sx={{ 
+                                fontWeight: 600, 
+                                color: '#e3f2fd', 
+                                width: '12%',
+                                textAlign: 'center',
+                                fontSize: 14
+                            }}>
+                                Due Date
+                            </Typography>
+                        </Box>
+                    )}
+                    
                     {todaysTasks.length === 0 ? (
-                        <Typography>No tasks for today.</Typography>
+                        <Typography sx={{ color: '#e3f2fd', opacity: 0.8, pl: 0 }}>No tasks for today.</Typography>
                     ) : (
                         todaysTasks.map(task => (
-                            <Box key={task._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, p: 1, borderRadius: 2, '&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#f0f4fa' } }}>
-                                <Chip
-                                    label={task.subject || 'No Subject'}
-                                    size="small"
-                                    sx={{
-                                        bgcolor: subjectColors[task.subject] || subjectColors.Default,
-                                        color: '#fff',
-                                        fontWeight: 700,
-                                        mr: 1,
-                                        borderRadius: 1,
-                                    }}
-                                />
-                                <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority) }} />
-                                <Box sx={{ flexGrow: 1 }}>
-                                    <Typography sx={{ fontWeight: 500, textDecoration: task.status === 'completed' ? 'line-through' : 'none' }}>{task.title}</Typography>
-                                    {task.description && <Typography sx={{ color: '#888', fontSize: 13 }}>{task.description}</Typography>}
+                            <Box key={task._id} sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                mb: 1, 
+                                p: 2, 
+                                borderRadius: 2, 
+                                bgcolor: 'rgba(255,255,255,0.08)',
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' } 
+                            }}>
+                                {/* Course Column */}
+                                <Box sx={{ width: '20%', display: 'flex', alignItems: 'center' }}>
+                                    <Chip
+                                        label={task.subject || 'No Subject'}
+                                        size="small"
+                                        sx={{
+                                            bgcolor: subjectColors[task.subject] || subjectColors.Default,
+                                            color: '#fff',
+                                            fontWeight: 700,
+                                            borderRadius: 1,
+                                        }}
+                                    />
                                 </Box>
-                                <Typography sx={{ minWidth: 80, textAlign: 'right', color: '#222', fontWeight: 500 }}>{getTaskTime(task.dueDate)}</Typography>
-                                <IconButton onClick={() => openEditDialog(task)}><EditIcon sx={{ color: '#222' }} /></IconButton>
-                                <IconButton onClick={() => handleDelete(task._id)} disabled={deletingId === task._id}><DeleteIcon sx={{ color: '#222' }} /></IconButton>
+                                
+                                {/* Task Name Column */}
+                                <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                                    <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority), mr: 1 }} />
+                                    <Box>
+                                        <Typography sx={{ 
+                                            fontWeight: 500, 
+                                            textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+                                            color: '#fff'
+                                        }}>{task.title}</Typography>
+                                        {task.description && <Typography sx={{ color: '#e3f2fd', fontSize: 13, opacity: 0.8 }}>{task.description}</Typography>}
+                                    </Box>
+                                </Box>
+                                
+                                {/* Category Column */}
+                                <Box sx={{ width: '12%', display: 'flex', alignItems: 'center' }}>
+                                    <Typography sx={{ 
+                                        color: '#e3f2fd', 
+                                        fontWeight: 500,
+                                        textTransform: 'capitalize',
+                                        fontSize: 14
+                                    }}>
+                                        {task.taskType || 'N/A'}
+                                    </Typography>
+                                </Box>
+                                
+                                {/* Due Date Column */}
+                                <Box sx={{ width: '12%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                                    <Typography sx={{ color: '#e3f2fd', fontWeight: 500, fontSize: 13, textAlign: 'center' }}>{getTaskDate(task.dueDate)}</Typography>
+                                    {task.dueDate && task.dueDate.includes('T') && (
+                                        <Typography sx={{ color: '#e3f2fd', fontWeight: 400, fontSize: 11, opacity: 0.8, textAlign: 'center' }}>
+                                            {getTaskTime(task.dueDate)}
+                                        </Typography>
+                                    )}
+                                </Box>
                             </Box>
                         ))
                     )}
-                </Paper>
-                {/* Upcoming Tasks */}
-                <Typography variant="h6" sx={{ mb: 1 }}>Upcoming tasks</Typography>
-                <Paper sx={{ p: 2, borderRadius: 3, boxShadow: 1, background: theme.palette.mode === 'dark' ? 'linear-gradient(135deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)' : '#fff', color: theme.palette.mode === 'dark' ? '#fff' : '#222' }}>
+                </Box>
+            </Paper>
+
+            {/* Upcoming Tasks */}
+            <Paper
+                sx={{
+                    width: { xs: '100%', md: 2000 },
+                    minHeight: 200,
+                    maxWidth: '82%',
+                    mx: 0,
+                    my: 3,
+                    p: 3,
+                    borderRadius: 5,
+                    boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'none',
+                    color: '#fff',
+                    border: '1.5px solid rgba(255,255,255,0.12)',
+                    backdropFilter: 'blur(12px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                }}
+            >
+                {/* Glassy Overlay */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        bgcolor: 'rgba(17,25,40,0.55)',
+                        zIndex: 2,
+                        borderRadius: 5,
+                        pointerEvents: 'none',
+                    }}
+                />
+                <Box sx={{ position: 'relative', zIndex: 3 }}>
+                    <Typography
+                        sx={{
+                            fontWeight: 600,
+                            opacity: 0.9,
+                            fontSize: 18,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            color: '#fff',
+                            mb: 2,
+                            textAlign: 'left',
+                            justifyContent: 'flex-start',
+                            pl: 0,
+                        }}
+                    >
+                        Upcoming tasks
+                    </Typography>
+                    
+                    {/* Column Headers */}
+                    {upcomingTasks.length > 0 && (
+                        <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            mb: 2, 
+                            p: 2, 
+                            borderRadius: 2, 
+                            bgcolor: 'rgba(255,255,255,0.12)',
+                            borderBottom: '1px solid rgba(255,255,255,0.2)'
+                        }}>
+                            <Typography sx={{ 
+                                fontWeight: 600, 
+                                color: '#e3f2fd', 
+                                width: '20%',
+                                fontSize: 14
+                            }}>
+                                Course
+                            </Typography>
+                            <Typography sx={{ 
+                                fontWeight: 600, 
+                                color: '#e3f2fd', 
+                                flexGrow: 1,
+                                fontSize: 14,
+                                pl: 6
+                            }}>
+                                Task Name
+                            </Typography>
+                            <Typography sx={{ 
+                                fontWeight: 600, 
+                                color: '#e3f2fd', 
+                                width: '12%',
+                                fontSize: 14
+                            }}>
+                                Category
+                            </Typography>
+                            <Typography sx={{ 
+                                fontWeight: 600, 
+                                color: '#e3f2fd', 
+                                width: '12%',
+                                textAlign: 'center',
+                                fontSize: 14
+                            }}>
+                                Due Date
+                            </Typography>
+                        </Box>
+                    )}
+                    
                     {upcomingTasks.length === 0 ? (
-                        <Typography>No upcoming tasks.</Typography>
+                        <Typography sx={{ color: '#e3f2fd', opacity: 0.8, pl: 0 }}>No upcoming tasks.</Typography>
                     ) : (
                         upcomingTasks.map(task => (
-                            <Box key={task._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, p: 1, borderRadius: 2, '&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#f0f4fa' } }}>
-                                <Chip
-                                    label={task.subject || 'No Subject'}
-                                    size="small"
-                                    sx={{
-                                        bgcolor: subjectColors[task.subject] || subjectColors.Default,
-                                        color: '#fff',
-                                        fontWeight: 700,
-                                        mr: 1,
-                                        borderRadius: 1,
-                                    }}
-                                />
-                                <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority) }} />
-                                <Box sx={{ flexGrow: 1 }}>
-                                    <Typography sx={{ fontWeight: 500, textDecoration: task.status === 'completed' ? 'line-through' : 'none' }}>{task.title}</Typography>
-                                    {task.description && <Typography sx={{ color: '#888', fontSize: 13 }}>{task.description}</Typography>}
+                            <Box key={task._id} sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                mb: 1, 
+                                p: 2, 
+                                borderRadius: 2, 
+                                bgcolor: 'rgba(255,255,255,0.08)',
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' } 
+                            }}>
+                                {/* Course Column */}
+                                <Box sx={{ width: '20%', display: 'flex', alignItems: 'center' }}>
+                                    <Chip
+                                        label={task.subject || 'No Subject'}
+                                        size="small"
+                                        sx={{
+                                            bgcolor: subjectColors[task.subject] || subjectColors.Default,
+                                            color: '#fff',
+                                            fontWeight: 700,
+                                            borderRadius: 1,
+                                        }}
+                                    />
                                 </Box>
-                                <Typography sx={{ minWidth: 80, textAlign: 'right', color: '#222', fontWeight: 500 }}>{getTaskDate(task.dueDate)}</Typography>
-                                <IconButton onClick={() => openEditDialog(task)}><EditIcon sx={{ color: '#222' }} /></IconButton>
-                                <IconButton onClick={() => handleDelete(task._id)} disabled={deletingId === task._id}><DeleteIcon sx={{ color: '#222' }} /></IconButton>
+                                
+                                {/* Task Name Column */}
+                                <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                                    <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority), mr: 1 }} />
+                                    <Box>
+                                        <Typography sx={{ 
+                                            fontWeight: 500, 
+                                            textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+                                            color: '#fff'
+                                        }}>{task.title}</Typography>
+                                        {task.description && <Typography sx={{ color: '#e3f2fd', fontSize: 13, opacity: 0.8 }}>{task.description}</Typography>}
+                                    </Box>
+                                </Box>
+                                
+                                {/* Category Column */}
+                                <Box sx={{ width: '12%', display: 'flex', alignItems: 'center' }}>
+                                    <Typography sx={{ 
+                                        color: '#e3f2fd', 
+                                        fontWeight: 500,
+                                        textTransform: 'capitalize',
+                                        fontSize: 14
+                                    }}>
+                                        {task.taskType || 'N/A'}
+                                    </Typography>
+                                </Box>
+                                
+                                {/* Due Date Column */}
+                                <Box sx={{ width: '12%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                                    <Typography sx={{ color: '#e3f2fd', fontWeight: 500, fontSize: 13, textAlign: 'center' }}>{getTaskDate(task.dueDate)}</Typography>
+                                    {task.dueDate && task.dueDate.includes('T') && (
+                                        <Typography sx={{ color: '#e3f2fd', fontWeight: 400, fontSize: 11, opacity: 0.8, textAlign: 'center' }}>
+                                            {getTaskTime(task.dueDate)}
+                                        </Typography>
+                                    )}
+                                </Box>
                             </Box>
                         ))
                     )}
-                </Paper>
-                {/* Edit Dialog */}
-                <Dialog open={editDialogOpen} onClose={closeEditDialog} maxWidth="sm" fullWidth>
-                    <DialogTitle>Edit Task</DialogTitle>
-                    <DialogContent sx={{ pb: 0 }}>
-                        <TextField
-                            margin="dense"
-                            label="Title"
-                            name="title"
-                            value={editForm.title}
-                            onChange={handleEditChange}
-                            fullWidth
-                        />
-                        <Box sx={{ mb: 2 }}>
-                            <Typography variant="subtitle2" sx={{ mb: 1 }}>Subjects</Typography>
-                            {subjects.map(subj => (
-                                <Box key={subj} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                    <MenuItem onClick={() => setEditForm(f => ({ ...f, subject: subj }))} selected={editForm.subject === subj} sx={{ flex: 1 }}>{subj}</MenuItem>
-                                    <IconButton size="small" onClick={() => handleDeleteSubject(subj)} disabled={isSubjectInUse(subj)}>
-                                        <DeleteIcon fontSize="small" color={isSubjectInUse(subj) ? 'disabled' : 'error'} />
-                                    </IconButton>
-                                </Box>
-                            ))}
-                            <Box sx={{ display: 'flex', mt: 1 }}>
-                                <TextField
-                                    size="small"
-                                    placeholder="Add subject"
-                                    value={newSubject}
-                                    onChange={e => setNewSubject(e.target.value)}
-                                    onKeyDown={e => { if (e.key === 'Enter') handleAddSubject(); }}
-                                    sx={{ flex: 1, mr: 1 }}
-                                    disabled={subjectLoading}
-                                />
-                                <Button onClick={handleAddSubject} disabled={subjectLoading || !newSubject.trim()} variant="contained">Add</Button>
+                </Box>
+            </Paper>
+
+            {/* Edit Dialog */}
+            <Dialog open={editDialogOpen} onClose={closeEditDialog} maxWidth="sm" fullWidth>
+                <DialogTitle>Edit Task</DialogTitle>
+                <DialogContent sx={{ pb: 0 }}>
+                    <TextField
+                        margin="dense"
+                        label="Title"
+                        name="title"
+                        value={editForm.title}
+                        onChange={handleEditChange}
+                        fullWidth
+                    />
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Subjects</Typography>
+                        {subjects.map(subj => (
+                            <Box key={subj} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <MenuItem onClick={() => setEditForm(f => ({ ...f, subject: subj }))} selected={editForm.subject === subj} sx={{ flex: 1 }}>{subj}</MenuItem>
+                                <IconButton size="small" onClick={() => handleDeleteSubject(subj)} disabled={isSubjectInUse(subj)}>
+                                    <DeleteIcon fontSize="small" color={isSubjectInUse(subj) ? 'disabled' : 'error'} />
+                                </IconButton>
                             </Box>
-                            {subjectError && <Typography color="error" variant="caption">{subjectError}</Typography>}
+                        ))}
+                        <Box sx={{ display: 'flex', mt: 1 }}>
+                            <TextField
+                                size="small"
+                                placeholder="Add subject"
+                                value={newSubject}
+                                onChange={e => setNewSubject(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleAddSubject(); }}
+                                sx={{ flex: 1, mr: 1 }}
+                                disabled={subjectLoading}
+                            />
+                            <Button onClick={handleAddSubject} disabled={subjectLoading || !newSubject.trim()} variant="contained">Add</Button>
                         </Box>
-                        <TextField
-                            margin="dense"
-                            label="Description"
-                            name="description"
-                            value={editForm.description}
-                            onChange={handleEditChange}
-                            fullWidth
+                        {subjectError && <Typography color="error" variant="caption">{subjectError}</Typography>}
+                    </Box>
+                    <TextField
+                        margin="dense"
+                        label="Description"
+                        name="description"
+                        value={editForm.description}
+                        onChange={handleEditChange}
+                        fullWidth
+                    />
+                    <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                        <DateTimePickerMenu
+                            value={editForm.dueDate}
+                            onChange={val => setEditForm(f => ({ ...f, dueDate: val }))}
+                            sx={{ flex: 1 }}
                         />
-                        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                            <DateTimePickerMenu
-                                value={editForm.dueDate}
-                                onChange={val => setEditForm(f => ({ ...f, dueDate: val }))}
-                                sx={{ flex: 1 }}
-                            />
-                            <PriorityMenuButton
-                                value={editForm.priority as Priority}
-                                onClick={e => setEditPriorityAnchorEl(e.currentTarget)}
-                                sx={{ flex: 1 }}
-                            />
-                            <PriorityMenu
-                                anchorEl={editPriorityAnchorEl}
-                                open={Boolean(editPriorityAnchorEl)}
-                                onClose={() => setEditPriorityAnchorEl(null)}
-                                value={editForm.priority as Priority}
-                                onChange={p => setEditForm(f => ({ ...f, priority: p }))}
-                            />
-                        </Box>
-                    </DialogContent>
-                    <DialogActions sx={{ pb: 2, pr: 3 }}>
-                        <Button onClick={closeEditDialog}>Cancel</Button>
-                        <Button onClick={handleEditSave} variant="contained">Save</Button>
-                    </DialogActions>
-                </Dialog>
-            </Grid>
-        </Grid>
+                        <PriorityMenuButton
+                            value={editForm.priority as Priority}
+                            onClick={e => setEditPriorityAnchorEl(e.currentTarget)}
+                            sx={{ flex: 1 }}
+                        />
+                        <PriorityMenu
+                            anchorEl={editPriorityAnchorEl}
+                            open={Boolean(editPriorityAnchorEl)}
+                            onClose={() => setEditPriorityAnchorEl(null)}
+                            value={editForm.priority as Priority}
+                            onChange={p => setEditForm(f => ({ ...f, priority: p }))}
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ pb: 2, pr: 3 }}>
+                    <Button onClick={closeEditDialog}>Cancel</Button>
+                    <Button onClick={handleEditSave} variant="contained">Save</Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
     );
 };
 
