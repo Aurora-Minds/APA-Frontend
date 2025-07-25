@@ -52,8 +52,8 @@ const EmailSettings: React.FC = () => {
         axios.get(`${API_BASE_URL}/email-reminders/preferences`),
         axios.get(`${API_BASE_URL}/users/me`)
       ]);
-      setPreferences(preferencesRes.data.preferences);
-      setUserEmail({ email: userRes.data.email || '' });
+      setPreferences((preferencesRes.data as any).preferences);
+      setUserEmail({ email: (userRes.data as any).email || '' });
     } catch (error: any) {
       setMessage({ type: 'error', text: 'Failed to load email preferences' });
     } finally {
@@ -112,7 +112,7 @@ const EmailSettings: React.FC = () => {
     
     try {
       const response = await axios.post(`${API_BASE_URL}/email-reminders/test`);
-      setMessage({ type: 'success', text: response.data.msg });
+      setMessage({ type: 'success', text: (response.data as any).msg });
     } catch (error: any) {
       setMessage({ type: 'error', text: error.response?.data?.msg || 'Failed to send test email' });
     } finally {
