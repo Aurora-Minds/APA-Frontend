@@ -45,7 +45,6 @@ import CircularProgress from '@mui/material/CircularProgress';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { useNavigate } from 'react-router-dom';
 import Chip from '@mui/material/Chip';
-import AccountSettings from './AccountSettings';
 import Tooltip from '@mui/material/Tooltip';
 import ListItemButton from '@mui/material/ListItemButton';
 import DateTimePickerMenu from './DateTimePickerMenu';
@@ -846,24 +845,18 @@ const Dashboard: React.FC = () => {
             return;
         }
         let dueDate = quickAddDate;
-        console.log('quickAddDate value:', quickAddDate);
         if (!dueDate) {
             const today = new Date();
             dueDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-            console.log('No date set, using today:', dueDate);
         }
         
         // Add time to the due date if it's set
         if (quickAddTime) {
-            dueDate = dueDate + 'T' + quickAddTime + ':00';
+            dueDate = new Date(`${dueDate}T${quickAddTime}:00`).toISOString();
+        } else {
+            dueDate = new Date(dueDate).toISOString();
         }
         
-        // Only adjust date for timezone if no time is set (midnight default)
-        if (dueDate === todayStr && !quickAddTime) {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            dueDate = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
-        }
         const dataToSend = {
             title: quickAddTitle,
             subject: quickAddSubject,
@@ -875,10 +868,6 @@ const Dashboard: React.FC = () => {
             priority: quickAddPriority,
             status: 'pending',
         };
-        console.log('Sending task data:', dataToSend);
-        console.log('Due date being sent:', dueDate);
-        console.log('Current local date:', new Date().toLocaleDateString());
-        console.log('Today string for comparison:', todayStr);
         try {
             await axios.post(`${API_BASE_URL}/tasks`, dataToSend);
             // Award XP based on priority: None=5, Low=10, Medium=15, High=20
@@ -954,7 +943,6 @@ const Dashboard: React.FC = () => {
     const setToday = () => {
         const today = new Date();
         const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        console.log('setToday called, setting date to:', todayStr);
         setQuickAddDate(todayStr);
     };
     const setTomorrow = () => {
@@ -975,11 +963,6 @@ const Dashboard: React.FC = () => {
     const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     
-    console.log('Today string:', todayStr);
-    console.log('All tasks:', tasks);
-    console.log('Task types:', tasks.map(t => ({ title: t.title, taskType: t.taskType })));
-    console.log('Total tasks before filtering:', tasks.length);
-    
     const todaysTasks = tasks
         .filter(task => {
             if (!task.dueDate || task.status === 'completed') return false;
@@ -992,13 +975,9 @@ const Dashboard: React.FC = () => {
                 // Old format: "2025-07-23"
                 taskDateStr = task.dueDate;
             }
-            console.log(`Task "${task.title}": dueDate=${task.dueDate}, taskDateStr=${taskDateStr}, todayStr=${todayStr}, isToday=${taskDateStr === todayStr}`);
             return taskDateStr === todayStr;
         })
         .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-    
-    console.log('Today\'s tasks count:', todaysTasks.length);
-    console.log('Today\'s tasks:', todaysTasks.map(t => t.title));
     
     const upcomingTasks = tasks
         .filter(task => {
@@ -1016,9 +995,6 @@ const Dashboard: React.FC = () => {
             return taskDateStr >= todayStr;
         })
         .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-    
-    console.log('Upcoming tasks count:', upcomingTasks.length);
-    console.log('Upcoming tasks:', upcomingTasks.map(t => t.title));
 
     // Subject dropdown handlers
     const handleSubjectClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -1130,20 +1106,13 @@ const Dashboard: React.FC = () => {
         if (!dueDate) return '';
         const date = new Date(dueDate);
         if (isNaN(date.getTime())) return '';
-        
-        // Convert to 12-hour format with AM/PM
-        const hours = date.getUTCHours();
-        const minutes = date.getUTCMinutes();
-        const period = hours >= 12 ? 'PM' : 'AM';
-        const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-        return `${displayHours}:${minutes.toString().padStart(2, '0')}${period}`;
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
     const getTaskDate = (dueDate: string) => {
         if (!dueDate) return '';
-        
-        // Always show the actual date
-        const due = new Date(dueDate);
-        return due.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+        const date = new Date(dueDate);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
     };
 
     // Helper to get checkbox color by priority
