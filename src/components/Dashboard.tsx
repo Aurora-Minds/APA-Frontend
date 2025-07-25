@@ -45,7 +45,6 @@ import CircularProgress from '@mui/material/CircularProgress';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { useNavigate } from 'react-router-dom';
 import Chip from '@mui/material/Chip';
-import AccountSettings from './AccountSettings';
 import Tooltip from '@mui/material/Tooltip';
 import ListItemButton from '@mui/material/ListItemButton';
 import DateTimePickerMenu from './DateTimePickerMenu';
