@@ -3,10 +3,12 @@ import { Paper, Typography, Box, Checkbox, IconButton, CircularProgress, MenuIte
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import { useTheme } from '@mui/material/styles';
 import DateTimePickerMenu from './DateTimePickerMenu';
 import PriorityMenu, { Priority, PriorityMenuButton } from './PriorityMenu';
 import Chip from '@mui/material/Chip';
+import { notificationService } from '../services/notificationService';
 
 interface Task {
     _id: string;
@@ -53,6 +55,7 @@ const AllTasks: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const { user, refreshUser } = useAuth();
+    const { addNotification } = useNotifications();
     const theme = useTheme();
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editTask, setEditTask] = useState<Task | null>(null);
@@ -69,6 +72,27 @@ const AllTasks: React.FC = () => {
         fetchTasks();
         fetchSubjects();
     }, []);
+
+    // Monitor tasks for due date notifications
+    useEffect(() => {
+        if (user) {
+            notificationService.setCurrentUser(user._id);
+        }
+        
+        const checkTaskDueDates = () => {
+            tasks.forEach(task => {
+                notificationService.checkTaskDueDate(task, addNotification);
+            });
+        };
+
+        // Check immediately when tasks change
+        checkTaskDueDates();
+
+        // Set up interval to check every minute
+        const interval = setInterval(checkTaskDueDates, 60000);
+
+        return () => clearInterval(interval);
+    }, [tasks, addNotification, user]);
 
     const fetchTasks = async () => {
         try {
@@ -105,12 +129,17 @@ const AllTasks: React.FC = () => {
 
     const handleComplete = async (task: Task) => {
         try {
+            const isCompleting = task.status !== 'completed';
             await axios.put(`${API_BASE_URL}/tasks/${task._id}`, {
                 ...task,
-                status: task.status === 'completed' ? 'pending' : 'completed',
+                status: isCompleting ? 'completed' : 'pending',
             });
             fetchTasks();
             refreshUser();
+            if (isCompleting) {
+                // Add notification for task completion
+                notificationService.addTaskCompletedNotification(task, addNotification);
+            }
         } catch (err) {
             console.error('Error updating task:', err);
         }
