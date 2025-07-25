@@ -845,11 +845,9 @@ const Dashboard: React.FC = () => {
             return;
         }
         let dueDate = quickAddDate;
-        console.log('quickAddDate value:', quickAddDate);
         if (!dueDate) {
             const today = new Date();
             dueDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-            console.log('No date set, using today:', dueDate);
         }
         
         // Add time to the due date if it's set
@@ -874,10 +872,6 @@ const Dashboard: React.FC = () => {
             priority: quickAddPriority,
             status: 'pending',
         };
-        console.log('Sending task data:', dataToSend);
-        console.log('Due date being sent:', dueDate);
-        console.log('Current local date:', new Date().toLocaleDateString());
-        console.log('Today string for comparison:', todayStr);
         try {
             await axios.post(`${API_BASE_URL}/tasks`, dataToSend);
             // Award XP based on priority: None=5, Low=10, Medium=15, High=20
@@ -953,7 +947,6 @@ const Dashboard: React.FC = () => {
     const setToday = () => {
         const today = new Date();
         const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-        console.log('setToday called, setting date to:', todayStr);
         setQuickAddDate(todayStr);
     };
     const setTomorrow = () => {
@@ -974,11 +967,6 @@ const Dashboard: React.FC = () => {
     const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     
-    console.log('Today string:', todayStr);
-    console.log('All tasks:', tasks);
-    console.log('Task types:', tasks.map(t => ({ title: t.title, taskType: t.taskType })));
-    console.log('Total tasks before filtering:', tasks.length);
-    
     const todaysTasks = tasks
         .filter(task => {
             if (!task.dueDate || task.status === 'completed') return false;
@@ -991,13 +979,9 @@ const Dashboard: React.FC = () => {
                 // Old format: "2025-07-23"
                 taskDateStr = task.dueDate;
             }
-            console.log(`Task "${task.title}": dueDate=${task.dueDate}, taskDateStr=${taskDateStr}, todayStr=${todayStr}, isToday=${taskDateStr === todayStr}`);
             return taskDateStr === todayStr;
         })
         .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-    
-    console.log('Today\'s tasks count:', todaysTasks.length);
-    console.log('Today\'s tasks:', todaysTasks.map(t => t.title));
     
     const upcomingTasks = tasks
         .filter(task => {
@@ -1014,10 +998,7 @@ const Dashboard: React.FC = () => {
             // Include today's tasks in upcoming as well (so they appear in both sections)
             return taskDateStr >= todayStr;
         })
-        .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-    
-    console.log('Upcoming tasks count:', upcomingTasks.length);
-    console.log('Upcoming tasks:', upcomingTasks.map(t => t.title));
+        .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority});
 
     // Subject dropdown handlers
     const handleSubjectClick = (event: React.MouseEvent<HTMLButtonElement>) => {
