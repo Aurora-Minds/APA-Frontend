@@ -100,9 +100,9 @@ const Analytics: React.FC = () => {
         axios.get(`${API_BASE_URL}/analytics/streak`)
       ]);
 
-      setFocusSummary(summaryRes.data);
-      setInsights(insightsRes.data);
-      setStreak(streakRes.data);
+      setFocusSummary(summaryRes.data as FocusSummary);
+      setInsights(insightsRes.data as ProductivityInsights);
+      setStreak(streakRes.data as StreakData);
     } catch (err: any) {
       setError(err.response?.data?.msg || 'Failed to fetch analytics');
     } finally {
