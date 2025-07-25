@@ -9,6 +9,8 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import TimerIcon from '@mui/icons-material/Timer';
 import ScienceIcon from '@mui/icons-material/Science';
 import PersonIcon from '@mui/icons-material/Person';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 const Sidebar: React.FC = () => {
     const location = useLocation();
@@ -19,6 +21,8 @@ const Sidebar: React.FC = () => {
         { text: 'Tasks', icon: <AssignmentIcon />, path: '/tasks' },
         { text: 'Focus Timer', icon: <TimerIcon />, path: '/focus-timer' },
         { text: 'Lab Assistant', icon: <ScienceIcon />, path: '/lab-assistant' },
+        { text: 'Focus Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
+        { text: 'Email Settings', icon: <NotificationsIcon />, path: '/email-settings' },
     ];
     return (
         <Drawer
