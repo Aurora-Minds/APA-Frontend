@@ -20,10 +20,6 @@ const Sidebar: React.FC = () => {
         { text: 'Focus Timer', icon: <TimerIcon />, path: '/focus-timer' },
         { text: 'Lab Assistant', icon: <ScienceIcon />, path: '/lab-assistant' },
     ];
-    const accountMenu = [
-        { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
-    ];
-
     return (
         <Drawer
             variant="permanent"
@@ -60,39 +56,6 @@ const Sidebar: React.FC = () => {
             <Divider sx={{ mx: 2, borderColor: 'rgba(255,255,255,0.12)', my: 1 }} />
             <List sx={{ p: 1 }}>
                 {mainMenu.map((item) => (
-                    <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
-                        <ListItemButton
-                            component={Link}
-                            to={item.path}
-                            selected={location.pathname === item.path}
-                            sx={{
-                                borderRadius: 3,
-                                px: 2,
-                                py: 1.2,
-                                color: location.pathname === item.path ? 'primary.main' : 'text.secondary',
-                                background: location.pathname === item.path ? 'rgba(76,110,245,0.12)' : 'none',
-                                '&.Mui-selected': {
-                                    background: 'rgba(76,110,245,0.18)',
-                                    color: 'primary.main',
-                                },
-                                '&:hover': {
-                                    background: 'rgba(76,110,245,0.10)',
-                                    color: 'primary.main',
-                                },
-                                transition: 'all 0.2s',
-                            }}
-                        >
-                            <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>{item.icon}</ListItemIcon>
-                            <ListItemText primary={item.text} sx={{ color: 'inherit' }} />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
-            </List>
-            <Typography variant="caption" sx={{ color: 'text.secondary', px: 3, mt: 2, mb: 0.5, fontWeight: 700, letterSpacing: 1 }}>
-                ACCOUNT PAGES
-            </Typography>
-            <List sx={{ p: 1 }}>
-                {accountMenu.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
                         <ListItemButton
                             component={Link}
