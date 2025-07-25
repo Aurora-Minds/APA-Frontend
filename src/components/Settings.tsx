@@ -18,6 +18,11 @@ const Settings: React.FC = () => {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
 
+    const handleGoogleCalendarIntegration = () => {
+        // Redirect to backend endpoint to initiate Google OAuth flow
+        window.location.href = `${process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api'}/auth/google`;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSuccess('');
@@ -64,6 +69,20 @@ const Settings: React.FC = () => {
                         </Button>
                     </Box>
                 </form>
+                <Box sx={{ mt: 4 }}>
+                    <Typography variant="h5" gutterBottom>
+                        Integrations
+                    </Typography>
+                    <Button
+                        variant="contained"
+                        onClick={handleGoogleCalendarIntegration}
+                    >
+                        Integrate with Google Calendar
+                    </Button>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        This feature will add the tasks you create to your Google Calendar, including details like due date and time.
+                    </Typography>
+                </Box>
             </Paper>
         </Container>
     );
