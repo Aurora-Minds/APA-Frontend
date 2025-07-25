@@ -22,6 +22,10 @@ interface EmailPreferences {
   reminderTime: string;
 }
 
+interface UserEmail {
+  email: string;
+}
+
 const EmailSettings: React.FC = () => {
   const [preferences, setPreferences] = useState<EmailPreferences>({
     taskReminders: true,
@@ -29,9 +33,11 @@ const EmailSettings: React.FC = () => {
     weeklyReport: true,
     reminderTime: '09:00'
   });
+  const [userEmail, setUserEmail] = useState<UserEmail>({ email: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [updatingEmail, setUpdatingEmail] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
@@ -42,8 +48,12 @@ const EmailSettings: React.FC = () => {
 
   const fetchPreferences = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/email-reminders/preferences`);
-      setPreferences(response.data.preferences);
+      const [preferencesRes, userRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/email-reminders/preferences`),
+        axios.get(`${API_BASE_URL}/users/me`)
+      ]);
+      setPreferences(preferencesRes.data.preferences);
+      setUserEmail({ email: userRes.data.email || '' });
     } catch (error: any) {
       setMessage({ type: 'error', text: 'Failed to load email preferences' });
     } finally {
@@ -72,7 +82,31 @@ const EmailSettings: React.FC = () => {
     }
   };
 
+  const updateEmail = async () => {
+    if (!userEmail.email.trim()) {
+      setMessage({ type: 'error', text: 'Please enter a valid email address' });
+      return;
+    }
+    
+    setUpdatingEmail(true);
+    setMessage(null);
+    
+    try {
+      await axios.put(`${API_BASE_URL}/users/me`, { email: userEmail.email.trim() });
+      setMessage({ type: 'success', text: 'Email address updated successfully!' });
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.response?.data?.msg || 'Failed to update email address' });
+    } finally {
+      setUpdatingEmail(false);
+    }
+  };
+
   const sendTestEmail = async () => {
+    if (!userEmail.email.trim()) {
+      setMessage({ type: 'error', text: 'Please add an email address first' });
+      return;
+    }
+    
     setTesting(true);
     setMessage(null);
     
@@ -110,6 +144,39 @@ const EmailSettings: React.FC = () => {
         <CardContent>
           <Box display="flex" alignItems="center" mb={2}>
             <Email sx={{ mr: 1, color: 'primary.main' }} />
+            <Typography variant="h6">Email Address</Typography>
+          </Box>
+          
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Add or update your email address to receive notifications
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <TextField
+                fullWidth
+                label="Email Address"
+                type="email"
+                value={userEmail.email}
+                onChange={(e) => setUserEmail({ email: e.target.value })}
+                placeholder="Enter your email address"
+                size="small"
+                sx={{ maxWidth: 400 }}
+              />
+              <Button
+                variant="contained"
+                onClick={updateEmail}
+                disabled={updatingEmail || !userEmail.email.trim()}
+                sx={{ minWidth: 120 }}
+              >
+                {updatingEmail ? 'Updating...' : 'Update Email'}
+              </Button>
+            </Box>
+          </Box>
+
+          <Divider sx={{ my: 3 }} />
+
+          <Box display="flex" alignItems="center" mb={2}>
+            <Notifications sx={{ mr: 1, color: 'primary.main' }} />
             <Typography variant="h6">Email Notification Settings</Typography>
           </Box>
 
@@ -194,10 +261,10 @@ const EmailSettings: React.FC = () => {
             <Button
               variant="outlined"
               onClick={sendTestEmail}
-              disabled={testing}
+              disabled={testing || !userEmail.email.trim()}
               startIcon={<Email />}
             >
-              {testing ? 'Sending...' : 'Send Test Email'}
+              {testing ? 'Sending...' : userEmail.email.trim() ? 'Send Test Email' : 'Add Email First'}
             </Button>
           </Box>
         </CardContent>
