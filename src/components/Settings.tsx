@@ -18,9 +18,15 @@ const Settings: React.FC = () => {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
 
-    const handleGoogleCalendarIntegration = () => {
-        // Redirect to backend endpoint to initiate Google OAuth flow
-        window.location.href = `${process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api'}/auth/google`;
+    const handleGoogleCalendarIntegration = async () => {
+        try {
+            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
+            const res = await axios.get(`${API_BASE_URL}/auth/google`);
+            window.location.href = res.data.url;
+        } catch (err) {
+            console.error('Error initiating Google Calendar integration:', err);
+            setError('Could not initiate Google Calendar integration.');
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
