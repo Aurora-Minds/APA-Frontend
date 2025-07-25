@@ -11,6 +11,8 @@ import { ColorModeProvider, useColorMode } from './theme/ColorModeContext';
 import FocusTimer from './components/FocusTimer';
 import AIAssistant from './components/AIAssistant';
 import AuthCallback from './components/AuthCallback';
+import Analytics from './components/Analytics';
+import EmailSettings from './components/EmailSettings';
 import Settings from './components/Settings';
 import { CircularProgress, Box, ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 
@@ -100,6 +102,26 @@ const App: React.FC = () => {
             <PrivateRoute>
               <MainLayout>
                 <Settings />
+              </MainLayout>
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/analytics" 
+          element={
+            <PrivateRoute>
+              <MainLayout>
+                <Analytics />
+              </MainLayout>
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/email-settings" 
+          element={
+            <PrivateRoute>
+              <MainLayout>
+                <EmailSettings />
               </MainLayout>
             </PrivateRoute>
           } 

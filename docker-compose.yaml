@@ -16,6 +16,8 @@ services:
       - GITHUB_CLIENT_SECRET=your_github_client_secret_here
       - SESSION_SECRET=your_session_secret_here
       - JWT_SECRET=aurora-minds-jwt-secret-2024
+      - EMAIL_USER=your-aurora-minds@gmail.com
+      - EMAIL_PASSWORD=your_gmail_app_password_here
     depends_on:
       - mongo
       - redis
