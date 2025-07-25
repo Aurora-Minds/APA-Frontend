@@ -2,7 +2,7 @@ import React from 'react';
 import Sidebar from './Sidebar';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import HomeIcon from '@mui/icons-material/Home';
 import Typography from '@mui/material/Typography';
@@ -17,6 +17,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import BrightnessAutoIcon from '@mui/icons-material/BrightnessAuto';
 import { useColorMode } from '../theme/ColorModeContext';
 import { useAuth } from '../context/AuthContext';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const theme = useTheme();
@@ -24,27 +25,37 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     ? 'linear-gradient(135deg, #0f1535 0%, #1b254b 100%)'
     : '#f4f7fe';
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { userPref, setTheme } = useColorMode();
   const [avatarMenuAnchor, setAvatarMenuAnchor] = React.useState<null | HTMLElement>(null);
+  const [showThemeMenu, setShowThemeMenu] = React.useState(false);
 
   // Map pathnames to titles
   const pathMap: Record<string, string> = {
     '/dashboard': 'Dashboard',
     '/tasks': 'Tasks',
     '/focus-timer': 'Focus Timer',
-    '/profile': 'Profile',
+    '/settings': 'Settings',
   };
   const title = pathMap[location.pathname] || 'Dashboard';
 
   const handleThemeChange = (newMode: 'light' | 'dark' | 'system') => {
     setTheme(newMode);
-    handleAvatarMenuClose();
   };
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => setAvatarMenuAnchor(event.currentTarget);
-  const handleAvatarMenuClose = () => setAvatarMenuAnchor(null);
-  const handleAccountSettings = () => { setAvatarMenuAnchor(null); /* open account settings dialog if needed */ };
+  const handleAvatarMenuClose = () => {
+    setAvatarMenuAnchor(null);
+    setShowThemeMenu(false);
+  }
+  const handleSettings = () => {
+    setAvatarMenuAnchor(null);
+    navigate('/settings');
+  };
   const handleLogout = () => { setAvatarMenuAnchor(null); logout(); };
+
+  const openThemeMenu = () => setShowThemeMenu(true);
+  const closeThemeMenu = () => setShowThemeMenu(false);
 
   return (
     <Box sx={{ minHeight: '100vh', width: '100vw', background: mainBg, display: 'flex' }}>
@@ -66,23 +77,35 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <AccountCircleIcon sx={{ width: 32, height: 32 }} />
             </IconButton>
             <Menu anchorEl={avatarMenuAnchor} open={Boolean(avatarMenuAnchor)} onClose={handleAvatarMenuClose}>
-              <MenuItem disabled sx={{ fontWeight: 600, opacity: 1, pointerEvents: 'none' }}>{user?.name || 'User'}</MenuItem>
-              <Divider />
-              <MenuItem onClick={handleAccountSettings}>Account Settings</MenuItem>
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
-              <Divider />
-              <MenuItem onClick={() => handleThemeChange('system')} selected={userPref === 'system'}>
-                <ListItemIcon><BrightnessAutoIcon fontSize="small" /></ListItemIcon>
-                System
-              </MenuItem>
-              <MenuItem onClick={() => handleThemeChange('light')} selected={userPref === 'light'}>
-                <ListItemIcon><Brightness7Icon fontSize="small" /></ListItemIcon>
-                Light
-              </MenuItem>
-              <MenuItem onClick={() => handleThemeChange('dark')} selected={userPref === 'dark'}>
-                <ListItemIcon><Brightness4Icon fontSize="small" /></ListItemIcon>
-                Dark
-              </MenuItem>
+              {!showThemeMenu ? (
+                <div>
+                  <MenuItem disabled sx={{ fontWeight: 600, opacity: 1, pointerEvents: 'none' }}>{user?.name || 'User'}</MenuItem>
+                  <Divider />
+                  <MenuItem onClick={handleSettings}>Settings</MenuItem>
+                  <MenuItem onClick={openThemeMenu}>Appearance</MenuItem>
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                </div>
+              ) : (
+                <div>
+                  <MenuItem onClick={closeThemeMenu}>
+                    <ArrowBackIcon sx={{ mr: 1 }} />
+                    Appearance
+                  </MenuItem>
+                  <Divider />
+                  <MenuItem onClick={() => handleThemeChange('system')} selected={userPref === 'system'}>
+                    <ListItemIcon><BrightnessAutoIcon fontSize="small" /></ListItemIcon>
+                    Device theme
+                  </MenuItem>
+                  <MenuItem onClick={() => handleThemeChange('dark')} selected={userPref === 'dark'}>
+                    <ListItemIcon><Brightness4Icon fontSize="small" /></ListItemIcon>
+                    Dark theme
+                  </MenuItem>
+                  <MenuItem onClick={() => handleThemeChange('light')} selected={userPref === 'light'}>
+                    <ListItemIcon><Brightness7Icon fontSize="small" /></ListItemIcon>
+                    Light theme
+                  </MenuItem>
+                </div>
+              )}
             </Menu>
           </Box>
         </Box>

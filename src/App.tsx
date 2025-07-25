@@ -11,6 +11,7 @@ import { ColorModeProvider, useColorMode } from './theme/ColorModeContext';
 import FocusTimer from './components/FocusTimer';
 import AIAssistant from './components/AIAssistant';
 import AuthCallback from './components/AuthCallback';
+import Settings from './components/Settings';
 import { CircularProgress, Box, ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -89,6 +90,16 @@ const App: React.FC = () => {
             <PrivateRoute>
               <MainLayout>
                 <AIAssistant />
+              </MainLayout>
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/settings" 
+          element={
+            <PrivateRoute>
+              <MainLayout>
+                <Settings />
               </MainLayout>
             </PrivateRoute>
           } 
