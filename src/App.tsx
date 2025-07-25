@@ -10,6 +10,7 @@ import MainLayout from './components/MainLayout';
 import { ColorModeProvider, useColorMode } from './theme/ColorModeContext';
 import FocusTimer from './components/FocusTimer';
 import AIAssistant from './components/AIAssistant';
+import AuthCallback from './components/AuthCallback';
 import { CircularProgress, Box, ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -51,6 +52,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/auth-callback" element={<AuthCallback />} />
         <Route
           path="/dashboard"
           element={

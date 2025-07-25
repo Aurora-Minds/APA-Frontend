@@ -6,6 +6,7 @@ interface AuthContextType {
     user: User | null;
     login: (formData: any) => Promise<UserResponse>;
     register: (formData: any) => Promise<UserResponse>;
+    loginWithToken: (token: string) => Promise<void>;
     logout: () => void;
     setTheme: (theme: 'light' | 'dark' | 'system') => void;
     isAuthenticated: boolean;
@@ -75,6 +76,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return response.data;
     };
 
+    const loginWithToken = async (token: string) => {
+        localStorage.setItem('token', token);
+        axios.defaults.headers.common['x-auth-token'] = token;
+        try {
+            const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
+            const res = await axios.get<{ user: User }>(`${API_BASE_URL}/auth`);
+            setUser(res.data.user);
+            setIsAuthenticated(true);
+        } catch (err) {
+            localStorage.removeItem('token');
+            setUser(null);
+            setIsAuthenticated(false);
+            delete axios.defaults.headers.common['x-auth-token'];
+            throw err;
+        }
+    };
+
     const logout = () => {
         localStorage.removeItem('token');
         setUser(null);
@@ -99,13 +117,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
             const res = await axios.get<{ user: User }>(`${API_BASE_URL}/auth`);
             setUser(res.data.user);
-        } catch (err) {
-            console.error('Failed to refresh user', err);
+        } catch (error) {
+            console.error('Failed to refresh user', error);
         }
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, setTheme, isAuthenticated, loading, refreshUser }}>
+        <AuthContext.Provider value={{
+            user,
+            login,
+            register,
+            loginWithToken,
+            logout,
+            setTheme,
+            isAuthenticated,
+            loading,
+            refreshUser
+        }}>
             {children}
         </AuthContext.Provider>
     );

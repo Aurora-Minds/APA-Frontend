@@ -1,0 +1,61 @@
+version: '3.3'
+
+services:
+  backend:
+    image: myacr39cce637.azurecr.io/apa-backend:v59
+    container_name: backend
+    ports:
+      - "5001:5001"
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/academic-db
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+      - OPENAI_API_KEY=your_openai_api_key_here
+      - GITHUB_CLIENT_ID=your_github_client_id_here
+      - GITHUB_CLIENT_SECRET=your_github_client_secret_here
+      - SESSION_SECRET=your_session_secret_here
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - aurora-net
+
+  frontend:
+    image: myacr39cce637.azurecr.io/apa-webapp:v58
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_BASE=https://api.auroraminds.xyz/api
+    depends_on:
+      - backend
+    networks:
+      - aurora-net
+
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=academic-db
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - aurora-net
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - aurora-net
+
+volumes:
+  mongo-data:
+
+networks:
+  aurora-net:
+    driver: bridge 

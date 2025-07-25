@@ -14,7 +14,7 @@ import {
     FormControlLabel,
     Divider
 } from '@mui/material';
-import { Visibility, VisibilityOff, Google as GoogleIcon } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Google as GoogleIcon, GitHub as GitHubIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { Global } from '@emotion/react';
 
@@ -35,6 +35,10 @@ const Login: React.FC = () => {
         } catch (err: any) {
             setError(err.response?.data?.msg || 'An error occurred');
         }
+    };
+
+    const handleGitHubLogin = () => {
+        window.location.href = 'https://api.auroraminds.xyz/api/auth/github';
     };
 
     const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -271,6 +275,15 @@ const Login: React.FC = () => {
                                     disabled
                                 >
                                     Sign In with Google
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    startIcon={<GitHubIcon />}
+                                    sx={{ mb: 2, borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                                    onClick={handleGitHubLogin}
+                                >
+                                    Sign In with GitHub
                                 </Button>
                                 <Divider sx={{ my: 2 }} />
                                 <Box sx={{ textAlign: 'center' }}>
