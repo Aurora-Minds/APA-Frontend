@@ -7,7 +7,6 @@ import Breadcrumbs from '@mui/material/Breadcrumbs';
 import HomeIcon from '@mui/icons-material/Home';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
-import SettingsIcon from '@mui/icons-material/Settings';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -27,7 +26,6 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { userPref, setTheme } = useColorMode();
-  const [themeAnchorEl, setThemeAnchorEl] = React.useState<null | HTMLElement>(null);
   const [avatarMenuAnchor, setAvatarMenuAnchor] = React.useState<null | HTMLElement>(null);
 
   // Map pathnames to titles
@@ -39,11 +37,9 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
   const title = pathMap[location.pathname] || 'Dashboard';
 
-  const handleThemeMenuClick = (event: React.MouseEvent<HTMLElement>) => setThemeAnchorEl(event.currentTarget);
-  const handleThemeMenuClose = () => setThemeAnchorEl(null);
   const handleThemeChange = (newMode: 'light' | 'dark' | 'system') => {
     setTheme(newMode);
-    handleThemeMenuClose();
+    handleAvatarMenuClose();
   };
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => setAvatarMenuAnchor(event.currentTarget);
   const handleAvatarMenuClose = () => setAvatarMenuAnchor(null);
@@ -66,28 +62,15 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton onClick={handleThemeMenuClick} sx={{ color: theme.palette.text.primary }}>
-              <SettingsIcon />
+            <IconButton onClick={handleAvatarClick} sx={{ color: theme.palette.text.primary }}>
+              <AccountCircleIcon sx={{ width: 32, height: 32 }} />
             </IconButton>
-            <Menu
-              anchorEl={themeAnchorEl}
-              open={Boolean(themeAnchorEl)}
-              onClose={handleThemeMenuClose}
-              PaperProps={{
-                sx: {
-                  background: theme.palette.mode === 'dark'
-                    ? 'rgba(15, 21, 53, 0.95)'
-                    : 'rgba(255, 255, 255, 0.85)',
-                  boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18)',
-                  borderRadius: 2,
-                  color: theme.palette.mode === 'dark' ? '#fff' : '#222',
-                  backdropFilter: 'blur(8px)',
-                  border: theme.palette.mode === 'dark'
-                    ? '1px solid #232a4d'
-                    : '1px solid #e0eafc',
-                }
-              }}
-            >
+            <Menu anchorEl={avatarMenuAnchor} open={Boolean(avatarMenuAnchor)} onClose={handleAvatarMenuClose}>
+              <MenuItem disabled sx={{ fontWeight: 600, opacity: 1, pointerEvents: 'none' }}>{user?.name || 'User'}</MenuItem>
+              <Divider />
+              <MenuItem onClick={handleAccountSettings}>Account Settings</MenuItem>
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              <Divider />
               <MenuItem onClick={() => handleThemeChange('system')} selected={userPref === 'system'}>
                 <ListItemIcon><BrightnessAutoIcon fontSize="small" /></ListItemIcon>
                 System
@@ -100,15 +83,6 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <ListItemIcon><Brightness4Icon fontSize="small" /></ListItemIcon>
                 Dark
               </MenuItem>
-            </Menu>
-            <IconButton onClick={handleAvatarClick} sx={{ color: theme.palette.text.primary }}>
-              <AccountCircleIcon sx={{ width: 32, height: 32 }} />
-            </IconButton>
-            <Menu anchorEl={avatarMenuAnchor} open={Boolean(avatarMenuAnchor)} onClose={handleAvatarMenuClose}>
-              <MenuItem disabled sx={{ fontWeight: 600, opacity: 1, pointerEvents: 'none' }}>{user?.name || 'User'}</MenuItem>
-              <Divider />
-              <MenuItem onClick={handleAccountSettings}>Account Settings</MenuItem>
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </Box>
         </Box>
