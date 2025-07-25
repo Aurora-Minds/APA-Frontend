@@ -2,7 +2,7 @@ import React from 'react';
 import Sidebar from './Sidebar';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import HomeIcon from '@mui/icons-material/Home';
 import Typography from '@mui/material/Typography';
@@ -25,6 +25,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     ? 'linear-gradient(135deg, #0f1535 0%, #1b254b 100%)'
     : '#f4f7fe';
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { userPref, setTheme } = useColorMode();
   const [avatarMenuAnchor, setAvatarMenuAnchor] = React.useState<null | HTMLElement>(null);
@@ -35,7 +36,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     '/dashboard': 'Dashboard',
     '/tasks': 'Tasks',
     '/focus-timer': 'Focus Timer',
-    '/profile': 'Profile',
+    '/settings': 'Settings',
   };
   const title = pathMap[location.pathname] || 'Dashboard';
 
@@ -47,7 +48,10 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setAvatarMenuAnchor(null);
     setShowThemeMenu(false);
   }
-  const handleAccountSettings = () => { setAvatarMenuAnchor(null); /* open account settings dialog if needed */ };
+  const handleSettings = () => {
+    setAvatarMenuAnchor(null);
+    navigate('/settings');
+  };
   const handleLogout = () => { setAvatarMenuAnchor(null); logout(); };
 
   const openThemeMenu = () => setShowThemeMenu(true);
@@ -77,7 +81,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <div>
                   <MenuItem disabled sx={{ fontWeight: 600, opacity: 1, pointerEvents: 'none' }}>{user?.name || 'User'}</MenuItem>
                   <Divider />
-                  <MenuItem onClick={handleAccountSettings}>Account Settings</MenuItem>
+                  <MenuItem onClick={handleSettings}>Settings</MenuItem>
                   <MenuItem onClick={openThemeMenu}>Appearance</MenuItem>
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </div>
