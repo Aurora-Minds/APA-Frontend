@@ -11,19 +11,31 @@ const AuthCallback: React.FC = () => {
   useEffect(() => {
     const token = searchParams.get('token');
     const success = searchParams.get('success');
+    const error = searchParams.get('error');
+
+    if (error) {
+      console.error('OAuth authentication failed:', error);
+      navigate('/login?error=oauth_failed');
+      return;
+    }
 
     if (success === 'true' && token) {
-      // Store the token
-      localStorage.setItem('token', token);
-      
-      // Login with the token
-      loginWithToken(token);
-      
-      // Redirect to dashboard
-      navigate('/dashboard');
+      try {
+        // Store the token
+        localStorage.setItem('token', token);
+        
+        // Login with the token
+        loginWithToken(token);
+        
+        // Redirect to dashboard
+        navigate('/dashboard');
+      } catch (err) {
+        console.error('Error during OAuth login:', err);
+        navigate('/login?error=oauth_failed');
+      }
     } else {
       // Handle error
-      console.error('OAuth authentication failed');
+      console.error('OAuth authentication failed - missing token or success flag');
       navigate('/login?error=oauth_failed');
     }
   }, [searchParams, navigate, loginWithToken]);
