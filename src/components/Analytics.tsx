@@ -97,7 +97,7 @@ const Analytics: React.FC = () => {
       const [summaryRes, insightsRes, streakRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/analytics/focus-summary?period=${period}`),
         axios.get(`${API_BASE_URL}/analytics/productivity-insights`),
-        axios.get(`${API_BASE_URL}/analytics/streak`)
+        axios.get(`${API_BASE_URL}/analytics/streak?period=${period}`)
       ]);
 
       setFocusSummary(summaryRes.data as FocusSummary);
