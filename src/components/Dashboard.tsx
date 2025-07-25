@@ -998,7 +998,7 @@ const Dashboard: React.FC = () => {
             // Include today's tasks in upcoming as well (so they appear in both sections)
             return taskDateStr >= todayStr;
         })
-        .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority});
+        .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
     // Subject dropdown handlers
     const handleSubjectClick = (event: React.MouseEvent<HTMLButtonElement>) => {
