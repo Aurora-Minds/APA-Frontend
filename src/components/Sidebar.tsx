@@ -1,43 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
     Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography,
-    Box, Divider, useTheme, IconButton, Menu, MenuItem
+    Box, Divider, useTheme
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import TableChartIcon from '@mui/icons-material/TableChart';
-import ReceiptIcon from '@mui/icons-material/ReceiptLong';
-import GTranslateIcon from '@mui/icons-material/GTranslate';
-import PersonIcon from '@mui/icons-material/Person';
-import LoginIcon from '@mui/icons-material/Login';
-import HowToRegIcon from '@mui/icons-material/HowToReg';
-import SettingsIcon from '@mui/icons-material/Settings';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
-import BrightnessAutoIcon from '@mui/icons-material/BrightnessAuto';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import TimerIcon from '@mui/icons-material/Timer';
 import ScienceIcon from '@mui/icons-material/Science';
-import { useColorMode } from '../theme/ColorModeContext';
+import PersonIcon from '@mui/icons-material/Person';
 
 const Sidebar: React.FC = () => {
     const location = useLocation();
     const theme = useTheme();
-    const { userPref, setTheme } = useColorMode();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-    const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleThemeChange = (newMode: 'light' | 'dark' | 'system') => {
-        setTheme(newMode);
-        handleMenuClose();
-    };
 
     const mainMenu = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
@@ -77,7 +52,6 @@ const Sidebar: React.FC = () => {
                 p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center',
                 justifyContent: 'center', height: 'auto', my: 2, position: 'relative'
             }}>
-                {/* Removed settings/gear icon and theme switcher menu for top bar relocation */}
                 <img src="/aurora-minds-logo.png" alt="Aurora Minds Logo" style={{ width: 90, height: 90, marginBottom: 16, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 24px 0 rgba(0,0,0,0.2)' }} />
                 <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: 1, color: theme.palette.text.primary }}>
                     Aurora Minds
