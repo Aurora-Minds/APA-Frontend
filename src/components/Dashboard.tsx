@@ -1106,20 +1106,13 @@ const Dashboard: React.FC = () => {
         if (!dueDate) return '';
         const date = new Date(dueDate);
         if (isNaN(date.getTime())) return '';
-        
-        // Convert to 12-hour format with AM/PM
-        const hours = date.getUTCHours();
-        const minutes = date.getUTCMinutes();
-        const period = hours >= 12 ? 'PM' : 'AM';
-        const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-        return `${displayHours}:${minutes.toString().padStart(2, '0')}${period}`;
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
     const getTaskDate = (dueDate: string) => {
         if (!dueDate) return '';
-        
-        // Always show the actual date
-        const due = new Date(dueDate);
-        return due.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+        const date = new Date(dueDate);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
     };
 
     // Helper to get checkbox color by priority

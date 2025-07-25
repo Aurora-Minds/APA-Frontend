@@ -36,15 +36,9 @@ const getTaskTime = (dueDate: string) => {
 
 const getTaskDate = (dueDate: string) => {
     if (!dueDate) return '';
-    const due = new Date(dueDate);
-    if (isNaN(due.getTime())) return '';
-    const todayLocal = new Date();
-    todayLocal.setUTCHours(0, 0, 0, 0);
-    const tomorrowUtc = new Date(todayLocal);
-    tomorrowUtc.setUTCDate(todayLocal.getUTCDate() + 1);
-    const dueDayUtc = new Date(Date.UTC(due.getUTCFullYear(), due.getUTCMonth(), due.getUTCDate()));
-    if (dueDayUtc.getTime() === tomorrowUtc.getTime()) return 'Tomorrow';
-    return due.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+    const date = new Date(dueDate);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 const subjectColors: Record<string, string> = {
