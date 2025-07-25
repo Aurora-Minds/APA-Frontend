@@ -852,15 +852,11 @@ const Dashboard: React.FC = () => {
         
         // Add time to the due date if it's set
         if (quickAddTime) {
-            dueDate = dueDate + 'T' + quickAddTime + ':00';
+            dueDate = new Date(`${dueDate}T${quickAddTime}:00`).toISOString();
+        } else {
+            dueDate = new Date(dueDate).toISOString();
         }
         
-        // Only adjust date for timezone if no time is set (midnight default)
-        if (dueDate === todayStr && !quickAddTime) {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            dueDate = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
-        }
         const dataToSend = {
             title: quickAddTitle,
             subject: quickAddSubject,
