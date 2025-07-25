@@ -18,6 +18,9 @@ services:
       - JWT_SECRET=aurora-minds-jwt-secret-2024
       - EMAIL_USER=your-aurora-minds@gmail.com
       - EMAIL_PASSWORD=your_gmail_app_password_here
+      - GOOGLE_CLIENT_ID=your_google_client_id_here
+      - GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+      - GOOGLE_REDIRECT_URI=https://api.auroraminds.xyz/api/auth/google/callback
     depends_on:
       - mongo
       - redis

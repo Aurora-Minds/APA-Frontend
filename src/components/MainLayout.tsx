@@ -36,6 +36,9 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     '/dashboard': 'Dashboard',
     '/tasks': 'Tasks',
     '/focus-timer': 'Focus Timer',
+    '/lab-assistant': 'Lab Assistant',
+    '/analytics': 'Focus Analytics',
+    '/email-settings': 'Email Settings',
     '/settings': 'Settings',
   };
   const title = pathMap[location.pathname] || 'Dashboard';
