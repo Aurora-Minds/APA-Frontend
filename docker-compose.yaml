@@ -15,6 +15,7 @@ services:
       - GITHUB_CLIENT_ID=your_github_client_id_here
       - GITHUB_CLIENT_SECRET=your_github_client_secret_here
       - SESSION_SECRET=your_session_secret_here
+      - JWT_SECRET=aurora-minds-jwt-secret-2024
     depends_on:
       - mongo
       - redis
