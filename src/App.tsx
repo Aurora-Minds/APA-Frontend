@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TimerProvider } from './context/TimerContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -42,8 +43,8 @@ const App: React.FC = () => {
       warning: { main: '#ffb547' },
       error: { main: '#e31a1a' },
       background: {
-        default: '#0f1535',
-        paper: 'rgba(6, 11, 40, 0.94)',
+        default: mode === 'dark' ? '#0f1535' : '#f4f7fe',
+        paper: mode === 'dark' ? 'rgba(6, 11, 40, 0.94)' : '#ffffff',
       },
       // Remove gradients and neutrals from palette for linter compliance
     },
@@ -138,7 +139,9 @@ export default function AppWithProviders() {
       <AuthProvider>
         <ColorModeProvider>
           <TimerProvider>
-            <App />
+            <NotificationProvider>
+              <App />
+            </NotificationProvider>
           </TimerProvider>
         </ColorModeProvider>
       </AuthProvider>

@@ -31,6 +31,7 @@ import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useTimer } from '../context/TimerContext';
+import { useNotifications } from '../context/NotificationContext';
 import { SelectChangeEvent } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -68,6 +69,9 @@ import LeaderboardBg from '../assets/leaderboard-bg.jpg';
 import QuickAddJellyfish from '../assets/quickadd-jellyfish.jpg';
 import SubjectIcon from '@mui/icons-material/Subject';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import LeaderboardIcon from '@mui/icons-material/Leaderboard';
+import { notificationService } from '../services/notificationService';
+import AccountSettings from './AccountSettings';
 
 interface Task {
     _id: string;
@@ -168,13 +172,13 @@ const motivationalQuotes = [
   'Every accomplishment starts with the decision to try.',
   'Success is the sum of small efforts, repeated day in and day out.',
   'The secret of getting ahead is getting started.',
-  'Don’t watch the clock; do what it does. Keep going.',
+  "Don't watch the clock; do what it does. Keep going.",
   'The future depends on what you do today.',
   'Great things are done by a series of small things brought together.',
-  'You don’t have to be great to start, but you have to start to be great.',
+  "You don't have to be great to start, but you have to start to be great.",
   'Push yourself, because no one else is going to do it for you.',
   'Dream big and dare to fail.',
-  'Believe you can and you’re halfway there.'
+  "Believe you can and you're halfway there."
 ];
 
 // Add a list of timer-related quotes at the top of the file:
@@ -552,8 +556,8 @@ const Leaderboard: React.FC<{ users: LeaderboardUser[], currentUserName: string 
     <Paper
       sx={{
         position: 'relative',
-        height: '100%',
-        minHeight: 240,
+        width: '300px',
+        height: '700px',
         borderRadius: 3,
         overflow: 'hidden',
         backgroundImage: `url(${LeaderboardBg})`,
@@ -568,31 +572,31 @@ const Leaderboard: React.FC<{ users: LeaderboardUser[], currentUserName: string 
           background: 'rgba(17,25,40,0.55)',
           pointerEvents: 'none',
         },
-        boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
+        boxShadow: 'none',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'stretch',
-        minWidth: 0,
-        width: '100%',
         color: '#fff',
         p: 2,
-        border: '1.5px solid rgba(255,255,255,0.18)',
+        border: 'none',
         backdropFilter: 'blur(18px)',
         overflowX: 'hidden',
       }}
     >
-      <Box sx={{ position: 'relative', zIndex: 2, width: '100%', overflowX: 'hidden' }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 1 }}>Leaderboard</Typography>
-        <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', width: '100%' }}>
-          {withLevel.map((u, i) => (
-            <Box key={u._id} sx={{ display: 'flex', alignItems: 'center', mb: 1.5, p: 1.2, borderRadius: 2, background: u.name === currentUserName ? 'rgba(33,150,243,0.18)' : 'transparent', fontWeight: u.name === currentUserName ? 700 : 500, boxShadow: u.name === currentUserName ? '0 2px 8px #2196f355' : 'none' }}>
-              <Box sx={{ width: 28, minWidth: 28, textAlign: 'right', pl: 0.5, mr: 1, fontFamily: 'monospace', color: i === 0 ? '#ffd700' : '#90caf9', fontWeight: 700 }}>{i + 1}</Box>
-              <Box sx={{ flex: 1, color: u.name === currentUserName ? '#90caf9' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</Box>
-              <Box sx={{ minWidth: 44, textAlign: 'right', color: '#4fc3f7', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Lv. {u.level}</Box>
-            </Box>
-          ))}
+              <Box sx={{ position: 'relative', zIndex: 2, width: '100%', overflowX: 'hidden' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, textAlign: 'center', letterSpacing: 1 }}>Leaderboard</Typography>
+          <Box sx={{ 
+            width: '100%',
+          }}>
+            {withLevel.map((u, i) => (
+              <Box key={u._id} sx={{ display: 'flex', alignItems: 'center', mb: 1.5, p: 1.2, borderRadius: 2, background: u.name === currentUserName ? 'rgba(33,150,243,0.18)' : 'transparent', fontWeight: u.name === currentUserName ? 700 : 500, boxShadow: u.name === currentUserName ? '0 2px 8px #2196f355' : 'none' }}>
+                <Box sx={{ width: 28, minWidth: 28, textAlign: 'right', pl: 0.5, mr: 1, fontFamily: 'monospace', color: i === 0 ? '#ffd700' : '#90caf9', fontWeight: 700 }}>{i + 1}</Box>
+                <Box sx={{ flex: 1, color: u.name === currentUserName ? '#90caf9' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</Box>
+                <Box sx={{ minWidth: 44, textAlign: 'right', color: '#4fc3f7', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Lv. {u.level}</Box>
+              </Box>
+            ))}
+          </Box>
         </Box>
-      </Box>
     </Paper>
   );
 };
@@ -642,6 +646,7 @@ const Dashboard: React.FC = () => {
       setTimerDuration, 
       setFocusTaskId
     } = useTimer();
+    const { addNotification } = useNotifications();
     const [accountDialogOpen, setAccountDialogOpen] = useState(false);
     const [focusHistory, setFocusHistory] = useState<{ taskId: string, seconds: number, date: string }[]>([]);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -656,6 +661,7 @@ const Dashboard: React.FC = () => {
     // Track completed tasks in this session to prevent double XP
     const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
     const [leaderboardUsers, setLeaderboardUsers] = useState<LeaderboardUser[]>([]);
+    const [leaderboardAnchorEl, setLeaderboardAnchorEl] = useState<null | HTMLElement>(null);
 
     const navigate = useNavigate();
     const theme = useTheme();
@@ -671,6 +677,38 @@ const Dashboard: React.FC = () => {
         fetchTasks();
         fetchLeaderboard();
     }, []);
+
+    // Monitor tasks for due date notifications
+    useEffect(() => {
+        const checkTaskDueDates = async () => {
+            // Check frontend tasks
+            tasks.forEach(task => {
+                notificationService.checkTaskDueDate(task, addNotification);
+            });
+            
+            // Also check backend for any missed notifications
+            await notificationService.checkBackendNotifications(addNotification);
+        };
+
+        // Check immediately when tasks change
+        checkTaskDueDates();
+
+        // Set up interval to check every 30 seconds for more responsive notifications
+        const interval = setInterval(checkTaskDueDates, 30000);
+
+        return () => clearInterval(interval);
+    }, [tasks, addNotification]);
+
+    // Monitor user level up
+    useEffect(() => {
+        if (user) {
+            // Get auth token from localStorage
+            const token = localStorage.getItem('token');
+            notificationService.setCurrentUser(user._id, token || undefined);
+            // Check level up whenever user data changes
+            notificationService.checkLevelUp(user, addNotification);
+        }
+    }, [user?.xp, addNotification]); // Changed dependency to user?.xp to trigger on XP changes
 
 
 
@@ -870,7 +908,26 @@ const Dashboard: React.FC = () => {
             status: 'pending',
         };
         try {
-            await axios.post(`${API_BASE_URL}/tasks`, dataToSend);
+            const response = await axios.post<Task>(`${API_BASE_URL}/tasks`, dataToSend);
+            const newTask = response.data;
+            
+            // Check for immediate notification after creating the task
+            console.log('New task created, checking for notification:', newTask);
+            console.log('Task due date:', newTask.dueDate);
+            console.log('Current time:', new Date());
+            
+            // Add new task to notification service and check immediately
+            notificationService.addNewTask(newTask._id);
+            notificationService.checkTaskDueDate(newTask, addNotification);
+            
+            // Test notification to ensure the system is working
+            addNotification({
+              type: 'task_due',
+              title: 'Task Created!',
+              message: `Task "${newTask.title}" was created successfully`,
+              taskId: newTask._id,
+            });
+            
             // Award XP based on priority: None=5, Low=10, Medium=15, High=20
             // The backend will handle XP calculation based on priority
             refreshUser();
@@ -903,6 +960,8 @@ const Dashboard: React.FC = () => {
             fetchTasks();
             if (isCompleting) {
                 refreshUser();
+                // Add notification for task completion
+                notificationService.addTaskCompletedNotification(task, addNotification);
             }
         } catch (err) {
             console.error('Error updating task:', err);
@@ -1176,6 +1235,14 @@ const Dashboard: React.FC = () => {
       setFocusTaskId(taskId);
     };
 
+    const handleLeaderboardClick = (event: React.MouseEvent<HTMLElement>) => {
+      setLeaderboardAnchorEl(event.currentTarget);
+    };
+
+    const handleLeaderboardClose = () => {
+      setLeaderboardAnchorEl(null);
+    };
+
     // Ref for quick add input
     const quickAddInputRef = React.useRef<HTMLInputElement>(null);
     const scrollToQuickAdd = () => {
@@ -1185,14 +1252,22 @@ const Dashboard: React.FC = () => {
       }
     };
 
-    return (
-        <Box sx={{ minHeight: '100vh', bgcolor: 'transparent', overflowX: 'hidden', p: 4 }}>
-            {/* XP Bar */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%', mb: 1, mt: -2, ml: -10 }}>
-                <XPBar xp={user?.xp || 0} />
-            </Box>
-            
-            {/* Welcome and Focus Timer Panel Row */}
+
+
+        return (
+        <Box sx={{ 
+            minHeight: '100vh', 
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
+            {/* Main Content */}
+            <Box sx={{ position: 'relative', zIndex: 1, background: 'transparent', p: 4 }}>
+                {/* XP Bar */}
+                <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%', mb: 0 }}>
+                    <XPBar xp={user?.xp || 0} />
+                </Box>
+                
+                            {/* Welcome and Focus Timer Panel Row */}
             <Grid container spacing={3} sx={{ mb: 3, alignItems: 'stretch', maxWidth: '100%' }}>
                 <Grid item xs={12} md={5} sx={{ display: 'flex', alignItems: 'stretch' }}>
                     <WelcomeCard userName={user?.name || 'User'} quote={quote} fullHeight fullWidth onAddTaskClick={scrollToQuickAdd} />
@@ -1255,656 +1330,666 @@ const Dashboard: React.FC = () => {
                     </Paper>
                 </Grid>
             </Grid>
+        </Box>
 
             {/* Quick Add Task */}
-            <Paper
-                sx={{
-                    width: { xs: '100%', md: 2000 },
-                    minHeight: 280,
-                    maxWidth: '82%',
-                    mx: 0,
-                    my: 3,
-                    p: 3,
-                    borderRadius: 5,
-                    boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    background: 'none',
-                    color: '#fff',
-                    border: '1.5px solid rgba(255,255,255,0.12)',
-                    backdropFilter: 'blur(12px)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                }}
-            >
-                {/* Background image */}
-                <Box
+            <Box sx={{ p: 3 }}>
+                <Paper
                     sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        backgroundImage: `url(${QuickAddJellyfish})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        zIndex: 1,
-                    }}
-                />
-                {/* Glassy Overlay */}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        bgcolor: 'rgba(17,25,40,0.55)',
-                        zIndex: 2,
+                        width: '1230px',
+                        minHeight: 280,
+                        mx: 0,
+                        mb: -3,
+                        p: 3,
                         borderRadius: 5,
-                        pointerEvents: 'none',
+                        boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        background: 'none',
+                        color: '#fff',
+                        border: '1.5px solid rgba(255,255,255,0.12)',
+                        backdropFilter: 'blur(12px)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
                     }}
-                />
-                <Box sx={{ position: 'relative', zIndex: 3 }}>
-                    <Typography
-                        sx={{
-                            fontWeight: 600,
-                            opacity: 0.9,
-                            fontSize: 18,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            color: '#fff',
-                            mb: 2,
-                            textAlign: 'left',
-                            justifyContent: 'flex-start',
-                            pl: 1,
-                        }}
-                    >
-                        Add your task
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-                        <TextField
-                            inputRef={quickAddInputRef}
-                            placeholder="Task Title"
-                            variant="outlined"
-                            size="small"
-                            sx={{
-                                width: '40%',
-                                '& .MuiOutlinedInput-root': {
-                                    backgroundColor: 'rgba(255,255,255,0.25)',
-                                    borderRadius: 2,
-                                    '& fieldset': {
-                                        border: 'none',
-                                    },
-                                    '&:hover fieldset': {
-                                        border: 'none',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        border: 'none',
-                                    },
-                                    '& input': {
-                                        color: '#fff',
-                                        fontSize: 18,
-                                        '&::placeholder': {
-                                            color: '#e3f2fd',
-                                            opacity: 1,
-                                        },
-                                    },
-                                },
-                            }}
-                            value={quickAddTitle}
-                            onChange={e => setQuickAddTitle(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd(); }}
-                        />
-                        <TextField
-                            placeholder="Description"
-                            variant="outlined"
-                            size="small"
-                            sx={{
-                                width: '40%',
-                                '& .MuiOutlinedInput-root': {
-                                    backgroundColor: 'rgba(255,255,255,0.25)',
-                                    borderRadius: 2,
-                                    '& fieldset': {
-                                        border: 'none',
-                                    },
-                                    '&:hover fieldset': {
-                                        border: 'none',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        border: 'none',
-                                    },
-                                    '& input': {
-                                        color: '#fff',
-                                        fontSize: 18,
-                                        '&::placeholder': {
-                                            color: '#e3f2fd',
-                                            opacity: 1,
-                                        },
-                                    },
-                                },
-                            }}
-                            value={quickAddDescription}
-                            onChange={e => setQuickAddDescription(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd(); }}
-                        />
-                    </Box>
-                    {/* Lab, Assignment, and Project buttons - First Row */}
-                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                        <Button
-                            variant="outlined"
-                            onClick={() => {
-                                console.log('Lab button clicked, current type:', quickAddTaskType);
-                                setQuickAddTaskType('lab');
-                            }}
-                            sx={{
-                                fontWeight: 600,
-                                color: '#fff',
-                                borderColor: quickAddTaskType === 'lab' ? '#90caf9' : '#90caf9',
-                                bgcolor: quickAddTaskType === 'lab' ? 'rgba(144, 202, 249, 0.3)' : 'rgba(255,255,255,0.06)',
-                                boxShadow: quickAddTaskType === 'lab' ? '0 0 8px rgba(144, 202, 249, 0.5)' : 'none',
-                                textTransform: 'none',
-                                '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
-                                width: 160,
-                                height: 45,
-                                fontSize: 12,
-                            }}
-                        >
-                            Lab
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            onClick={() => {
-                                console.log('Assignment button clicked, current type:', quickAddTaskType);
-                                setQuickAddTaskType('assignment');
-                            }}
-                            sx={{
-                                fontWeight: 600,
-                                color: '#fff',
-                                borderColor: quickAddTaskType === 'assignment' ? '#90caf9' : '#90caf9',
-                                bgcolor: quickAddTaskType === 'assignment' ? 'rgba(144, 202, 249, 0.3)' : 'rgba(255,255,255,0.06)',
-                                boxShadow: quickAddTaskType === 'assignment' ? '0 0 8px rgba(144, 202, 249, 0.5)' : 'none',
-                                textTransform: 'none',
-                                '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
-                                width: 160,
-                                height: 45,
-                                fontSize: 12,
-                            }}
-                        >
-                            Assignment
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            onClick={() => {
-                                console.log('Project button clicked, current type:', quickAddTaskType);
-                                setQuickAddTaskType('project');
-                            }}
-                            sx={{
-                                fontWeight: 600,
-                                color: '#fff',
-                                borderColor: quickAddTaskType === 'project' ? '#90caf9' : '#90caf9',
-                                bgcolor: quickAddTaskType === 'project' ? 'rgba(144, 202, 249, 0.3)' : 'rgba(255,255,255,0.06)',
-                                boxShadow: quickAddTaskType === 'project' ? '0 0 8px rgba(144, 202, 249, 0.5)' : 'none',
-                                textTransform: 'none',
-                                '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
-                                width: 160,
-                                height: 45,
-                                fontSize: 12,
-                            }}
-                        >
-                            Project
-                        </Button>
-                    </Box>
-                    
-                    {/* Course, Priority, and Due Date & Time buttons - Second Row */}
-                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                        <Button
-                            variant="outlined"
-                            onClick={handleSubjectClick}
-                            sx={{
-                                fontWeight: 600,
-                                color: '#fff',
-                                borderColor: '#90caf9',
-                                bgcolor: 'rgba(255,255,255,0.06)',
-                                boxShadow: 'none',
-                                textTransform: 'none',
-                                '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
-                                width: 160,
-                                height: 45,
-                                fontSize: 12,
-                            }}
-                        >
-                            {quickAddSubject || 'Course'}
-                            <KeyboardArrowDownIcon sx={{ ml: 0.5 }} />
-                        </Button>
-                        <PriorityMenuButton
-                            value={quickAddPriority}
-                            onClick={e => setPriorityAnchorEl(e.currentTarget)}
-                            sx={{ 
-                                width: 160,
-                                height: 45,
-                                fontSize: 12,
-                            }}
-                        />
-                        <DateTimePickerMenu
-                            value={quickAddDate + (quickAddTime ? 'T' + quickAddTime : '')}
-                            onChange={(value) => {
-                                if (value) {
-                                    const date = new Date(value);
-                                    setQuickAddDate(date.toISOString().split('T')[0]);
-                                    setQuickAddTime(date.toTimeString().slice(0, 5));
-                                }
-                            }}
-                            sx={{ 
-                                width: 160,
-                                height: 45,
-                                fontSize: 12,
-                                '& .MuiButton-root': {
-                                    width: '100%',
-                                    height: '100%',
-                                    fontSize: 12,
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    padding: '6px 8px',
-                                }
-                            }}
-                        />
-                    </Box>
-                    
-                    {/* Create Task button - Third Row */}
-                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                        <Button
-                            variant="contained"
-                            onClick={() => {
-                                console.log('Create Task clicked with values:', {
-                                    title: quickAddTitle,
-                                    subject: quickAddSubject,
-                                    taskType: quickAddTaskType,
-                                    priority: quickAddPriority
-                                });
-                                handleQuickAdd();
-                            }}
-                            disabled={!quickAddTitle.trim() || !quickAddSubject.trim() || !quickAddTaskType}
-                            sx={{
-                                fontWeight: 700,
-                                color: '#fff',
-                                bgcolor: '#2196f3',
-                                borderColor: '#2196f3',
-                                boxShadow: '0 2px 8px #2196f355',
-                                textTransform: 'none',
-                                '&:hover': { bgcolor: '#1976d2' },
-                                '&:disabled': { 
-                                    bgcolor: 'rgba(255,255,255,0.1)', 
-                                    color: 'rgba(255,255,255,0.5)',
-                                    borderColor: 'rgba(255,255,255,0.2)'
-                                },
-                                width: 160,
-                                height: 45,
-                                fontSize: 12,
-                            }}
-                        >
-                            Create Task
-                        </Button>
-                    </Box>
-                </Box>
-                <PriorityMenu
-                    anchorEl={priorityAnchorEl}
-                    open={Boolean(priorityAnchorEl)}
-                    onClose={() => setPriorityAnchorEl(null)}
-                    value={quickAddPriority}
-                    onChange={(p: Priority) => setQuickAddPriority(p)}
-                />
-                <Menu
-                    anchorEl={subjectAnchorEl}
-                    open={Boolean(subjectAnchorEl)}
-                    onClose={handleSubjectClose}
                 >
-                    {subjects.map((subject) => (
-                        <MenuItem key={subject} onClick={() => handleSubjectSelect(subject)}>
-                            {subject}
+                    {/* Background image */}
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundImage: `url(${QuickAddJellyfish})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            zIndex: 1,
+                        }}
+                    />
+                    {/* Glassy Overlay */}
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            bgcolor: 'rgba(17,25,40,0.55)',
+                            zIndex: 2,
+                            borderRadius: 5,
+                            pointerEvents: 'none',
+                        }}
+                    />
+                    <Box sx={{ position: 'relative', zIndex: 3 }}>
+                        <Typography
+                            sx={{
+                                fontWeight: 600,
+                                opacity: 0.9,
+                                fontSize: 18,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                color: '#fff',
+                                mb: 2,
+                                textAlign: 'left',
+                                justifyContent: 'flex-start',
+                                pl: 1,
+                            }}
+                        >
+                            Add your task
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                            <TextField
+                                inputRef={quickAddInputRef}
+                                placeholder="Task Title"
+                                variant="outlined"
+                                size="small"
+                                sx={{
+                                    width: '40%',
+                                    '& .MuiOutlinedInput-root': {
+                                        backgroundColor: 'rgba(255,255,255,0.25)',
+                                        borderRadius: 2,
+                                        '& fieldset': {
+                                            border: 'none',
+                                        },
+                                        '&:hover fieldset': {
+                                            border: 'none',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            border: 'none',
+                                        },
+                                        '& input': {
+                                            color: '#fff',
+                                            fontSize: 18,
+                                            '&::placeholder': {
+                                                color: '#e3f2fd',
+                                                opacity: 1,
+                                            },
+                                        },
+                                    },
+                                }}
+                                value={quickAddTitle}
+                                onChange={e => setQuickAddTitle(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd(); }}
+                            />
+                            <TextField
+                                placeholder="Description"
+                                variant="outlined"
+                                size="small"
+                                sx={{
+                                    width: '40%',
+                                    '& .MuiOutlinedInput-root': {
+                                        backgroundColor: 'rgba(255,255,255,0.25)',
+                                        borderRadius: 2,
+                                        '& fieldset': {
+                                            border: 'none',
+                                        },
+                                        '&:hover fieldset': {
+                                            border: 'none',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            border: 'none',
+                                        },
+                                        '& input': {
+                                            color: '#fff',
+                                            fontSize: 18,
+                                            '&::placeholder': {
+                                                color: '#e3f2fd',
+                                                opacity: 1,
+                                            },
+                                        },
+                                    },
+                                }}
+                                value={quickAddDescription}
+                                onChange={e => setQuickAddDescription(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') handleQuickAdd(); }}
+                            />
+                        </Box>
+                        {/* Lab, Assignment, and Project buttons - First Row */}
+                        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => {
+                                    console.log('Lab button clicked, current type:', quickAddTaskType);
+                                    setQuickAddTaskType('lab');
+                                }}
+                                sx={{
+                                    fontWeight: 600,
+                                    color: '#fff',
+                                    borderColor: quickAddTaskType === 'lab' ? '#90caf9' : '#90caf9',
+                                    bgcolor: quickAddTaskType === 'lab' ? 'rgba(144, 202, 249, 0.3)' : 'rgba(255,255,255,0.06)',
+                                    boxShadow: quickAddTaskType === 'lab' ? '0 0 8px rgba(144, 202, 249, 0.5)' : 'none',
+                                    textTransform: 'none',
+                                    '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
+                                    width: 160,
+                                    height: 45,
+                                    fontSize: 12,
+                                }}
+                            >
+                                Lab
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                onClick={() => {
+                                    console.log('Assignment button clicked, current type:', quickAddTaskType);
+                                    setQuickAddTaskType('assignment');
+                                }}
+                                sx={{
+                                    fontWeight: 600,
+                                    color: '#fff',
+                                    borderColor: quickAddTaskType === 'assignment' ? '#90caf9' : '#90caf9',
+                                    bgcolor: quickAddTaskType === 'assignment' ? 'rgba(144, 202, 249, 0.3)' : 'rgba(255,255,255,0.06)',
+                                    boxShadow: quickAddTaskType === 'assignment' ? '0 0 8px rgba(144, 202, 249, 0.5)' : 'none',
+                                    textTransform: 'none',
+                                    '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
+                                    width: 160,
+                                    height: 45,
+                                    fontSize: 12,
+                                }}
+                            >
+                                Assignment
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                onClick={() => {
+                                    console.log('Project button clicked, current type:', quickAddTaskType);
+                                    setQuickAddTaskType('project');
+                                }}
+                                sx={{
+                                    fontWeight: 600,
+                                    color: '#fff',
+                                    borderColor: quickAddTaskType === 'project' ? '#90caf9' : '#90caf9',
+                                    bgcolor: quickAddTaskType === 'project' ? 'rgba(144, 202, 249, 0.3)' : 'rgba(255,255,255,0.06)',
+                                    boxShadow: quickAddTaskType === 'project' ? '0 0 8px rgba(144, 202, 249, 0.5)' : 'none',
+                                    textTransform: 'none',
+                                    '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
+                                    width: 160,
+                                    height: 45,
+                                    fontSize: 12,
+                                }}
+                            >
+                                Project
+                            </Button>
+                        </Box>
+                        
+                        {/* Course, Priority, and Due Date & Time buttons - Second Row */}
+                        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                            <Button
+                                variant="outlined"
+                                onClick={handleSubjectClick}
+                                sx={{
+                                    fontWeight: 600,
+                                    color: '#fff',
+                                    borderColor: '#90caf9',
+                                    bgcolor: 'rgba(255,255,255,0.06)',
+                                    boxShadow: 'none',
+                                    textTransform: 'none',
+                                    '&:hover': { bgcolor: '#1565c0', borderColor: '#fff' },
+                                    width: 160,
+                                    height: 45,
+                                    fontSize: 12,
+                                }}
+                            >
+                                {quickAddSubject || 'Course'}
+                                <KeyboardArrowDownIcon sx={{ ml: 0.5 }} />
+                            </Button>
+                            <PriorityMenuButton
+                                value={quickAddPriority}
+                                onClick={e => setPriorityAnchorEl(e.currentTarget)}
+                                sx={{ 
+                                    width: 160,
+                                    height: 45,
+                                    fontSize: 12,
+                                }}
+                            />
+                            <DateTimePickerMenu
+                                value={quickAddDate + (quickAddTime ? 'T' + quickAddTime : '')}
+                                onChange={(value) => {
+                                    if (value) {
+                                        try {
+                                            const date = new Date(value);
+                                            if (!isNaN(date.getTime())) {
+                                                setQuickAddDate(date.toISOString().split('T')[0]);
+                                                setQuickAddTime(date.toTimeString().slice(0, 5));
+                                            }
+                                        } catch (error) {
+                                            console.log('Invalid date value:', value);
+                                        }
+                                    }
+                                }}
+                                sx={{ 
+                                    width: 160,
+                                    height: 45,
+                                    fontSize: 12,
+                                    '& .MuiButton-root': {
+                                        width: '100%',
+                                        height: '100%',
+                                        fontSize: 12,
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        padding: '6px 8px',
+                                    }
+                                }}
+                            />
+                        </Box>
+                        
+                        {/* Create Task button - Third Row */}
+                        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                            <Button
+                                variant="contained"
+                                onClick={() => {
+                                    console.log('Create Task clicked with values:', {
+                                        title: quickAddTitle,
+                                        subject: quickAddSubject,
+                                        taskType: quickAddTaskType,
+                                        priority: quickAddPriority
+                                    });
+                                    handleQuickAdd();
+                                }}
+                                disabled={!quickAddTitle.trim() || !quickAddSubject.trim() || !quickAddTaskType}
+                                sx={{
+                                    fontWeight: 700,
+                                    color: '#fff',
+                                    bgcolor: '#2196f3',
+                                    borderColor: '#2196f3',
+                                    boxShadow: '0 2px 8px #2196f355',
+                                    textTransform: 'none',
+                                    '&:hover': { bgcolor: '#1976d2' },
+                                    '&:disabled': { 
+                                        bgcolor: 'rgba(255,255,255,0.1)', 
+                                        color: 'rgba(255,255,255,0.5)',
+                                        borderColor: 'rgba(255,255,255,0.2)'
+                                    },
+                                    width: 160,
+                                    height: 45,
+                                    fontSize: 12,
+                                }}
+                            >
+                                Create Task
+                            </Button>
+                        </Box>
+                    </Box>
+                    <PriorityMenu
+                        anchorEl={priorityAnchorEl}
+                        open={Boolean(priorityAnchorEl)}
+                        onClose={() => setPriorityAnchorEl(null)}
+                        value={quickAddPriority}
+                        onChange={(p: Priority) => setQuickAddPriority(p)}
+                    />
+                    <Menu
+                        anchorEl={subjectAnchorEl}
+                        open={Boolean(subjectAnchorEl)}
+                        onClose={handleSubjectClose}
+                    >
+                        {subjects.map((subject) => (
+                            <MenuItem key={subject} onClick={() => handleSubjectSelect(subject)}>
+                                {subject}
+                            </MenuItem>
+                        ))}
+                        <Divider />
+                        <MenuItem onClick={() => setAccountDialogOpen(true)}>
+                            <AddIcon sx={{ mr: 1 }} />
+                            Add New Subject
                         </MenuItem>
-                    ))}
-                    <Divider />
-                    <MenuItem onClick={() => setAccountDialogOpen(true)}>
-                        <AddIcon sx={{ mr: 1 }} />
-                        Add New Subject
-                    </MenuItem>
-                </Menu>
+                    </Menu>
 
 
 
-            </Paper>
+                </Paper>
+            </Box>
 
             {/* Today's Tasks */}
-            <Paper
-                sx={{
-                    width: { xs: '100%', md: 2000 },
-                    minHeight: 200,
-                    maxWidth: '82%',
-                    mx: 0,
-                    my: 3,
-                    p: 3,
-                    borderRadius: 5,
-                    boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    background: 'none',
-                    color: '#fff',
-                    border: '1.5px solid rgba(255,255,255,0.12)',
-                    backdropFilter: 'blur(12px)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                }}
-            >
-                {/* Glassy Overlay */}
-                <Box
+            <Box sx={{ position: 'relative', zIndex: 1, p: 3, background: 'transparent' }}>
+                <Paper
                     sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        bgcolor: 'rgba(17,25,40,0.55)',
-                        zIndex: 2,
+                        width: '1230px',
+                        minHeight: 200,
+                        mx: 0,
+                        mb: -6,
+                        p: 3,
                         borderRadius: 5,
-                        pointerEvents: 'none',
+                        boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        background: 'none',
+                        color: '#fff',
+                        border: '1.5px solid rgba(255,255,255,0.12)',
+                        backdropFilter: 'blur(12px)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
                     }}
-                />
-                <Box sx={{ position: 'relative', zIndex: 3 }}>
-                    <Typography
+                >
+                    {/* Glassy Overlay */}
+                    <Box
                         sx={{
-                            fontWeight: 600,
-                            opacity: 0.9,
-                            fontSize: 18,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            color: '#fff',
-                            mb: 2,
-                            textAlign: 'left',
-                            justifyContent: 'flex-start',
-                            pl: 0,
+                            position: 'absolute',
+                            inset: 0,
+                            bgcolor: 'rgba(17,25,40,0.55)',
+                            zIndex: 2,
+                            borderRadius: 5,
+                            pointerEvents: 'none',
                         }}
-                    >
-                        Today's tasks
-                    </Typography>
-                    
-                    {/* Column Headers */}
-                    {todaysTasks.length > 0 && (
-                        <Box sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            mb: 2, 
-                            p: 2, 
-                            borderRadius: 2, 
-                            bgcolor: 'rgba(255,255,255,0.12)',
-                            borderBottom: '1px solid rgba(255,255,255,0.2)'
-                        }}>
-                            <Typography sx={{ 
-                                fontWeight: 600, 
-                                color: '#e3f2fd', 
-                                width: '20%',
-                                fontSize: 14
-                            }}>
-                                Course
-                            </Typography>
-                            <Typography sx={{ 
-                                fontWeight: 600, 
-                                color: '#e3f2fd', 
-                                flexGrow: 1,
-                                fontSize: 14,
-                                pl: 6
-                            }}>
-                                Task Name
-                            </Typography>
-                            <Typography sx={{ 
-                                fontWeight: 600, 
-                                color: '#e3f2fd', 
-                                width: '12%',
-                                fontSize: 14
-                            }}>
-                                Category
-                            </Typography>
-                            <Typography sx={{ 
-                                fontWeight: 600, 
-                                color: '#e3f2fd', 
-                                width: '12%',
-                                textAlign: 'center',
-                                fontSize: 14
-                            }}>
-                                Due Date
-                            </Typography>
-                        </Box>
-                    )}
-                    
-                    {todaysTasks.length === 0 ? (
-                        <Typography sx={{ color: '#e3f2fd', opacity: 0.8, pl: 0 }}>No tasks for today.</Typography>
-                    ) : (
-                        todaysTasks.map(task => (
-                            <Box key={task._id} sx={{ 
+                    />
+                    <Box sx={{ position: 'relative', zIndex: 3 }}>
+                        <Typography
+                            sx={{
+                                fontWeight: 600,
+                                opacity: 0.9,
+                                fontSize: 18,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                color: '#fff',
+                                mb: 2,
+                                textAlign: 'left',
+                                justifyContent: 'flex-start',
+                                pl: 0,
+                            }}
+                        >
+                            Today's tasks
+                        </Typography>
+                        
+                        {/* Column Headers */}
+                        {todaysTasks.length > 0 && (
+                            <Box sx={{ 
                                 display: 'flex', 
                                 alignItems: 'center', 
-                                mb: 1, 
+                                mb: 2, 
                                 p: 2, 
                                 borderRadius: 2, 
-                                bgcolor: 'rgba(255,255,255,0.08)',
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' } 
+                                bgcolor: 'rgba(255,255,255,0.12)',
+                                borderBottom: '1px solid rgba(255,255,255,0.2)'
                             }}>
-                                {/* Course Column */}
-                                <Box sx={{ width: '20%', display: 'flex', alignItems: 'center' }}>
-                                    <Chip
-                                        label={task.subject || 'No Subject'}
-                                        size="small"
-                                        sx={{
-                                            bgcolor: subjectColors[task.subject] || subjectColors.Default,
-                                            color: '#fff',
-                                            fontWeight: 700,
-                                            borderRadius: 1,
-                                        }}
-                                    />
-                                </Box>
-                                
-                                {/* Task Name Column */}
-                                <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-                                    <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority), mr: 1 }} />
-                                    <Box>
+                                <Typography sx={{ 
+                                    fontWeight: 600, 
+                                    color: '#e3f2fd', 
+                                    width: '20%',
+                                    fontSize: 14
+                                }}>
+                                    Course
+                                </Typography>
+                                <Typography sx={{ 
+                                    fontWeight: 600, 
+                                    color: '#e3f2fd', 
+                                    flexGrow: 1,
+                                    fontSize: 14,
+                                    pl: 6
+                                }}>
+                                    Task Name
+                                </Typography>
+                                <Typography sx={{ 
+                                    fontWeight: 600, 
+                                    color: '#e3f2fd', 
+                                    width: '12%',
+                                    fontSize: 14
+                                }}>
+                                    Category
+                                </Typography>
+                                <Typography sx={{ 
+                                    fontWeight: 600, 
+                                    color: '#e3f2fd', 
+                                    width: '12%',
+                                    textAlign: 'center',
+                                    fontSize: 14
+                                }}>
+                                    Due Date
+                                </Typography>
+                            </Box>
+                        )}
+                        
+                        {todaysTasks.length === 0 ? (
+                            <Typography sx={{ color: '#e3f2fd', opacity: 0.8, pl: 0 }}>No tasks for today.</Typography>
+                        ) : (
+                            todaysTasks.map(task => (
+                                <Box key={task._id} sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    mb: 1, 
+                                    p: 2, 
+                                    borderRadius: 2, 
+                                    bgcolor: 'rgba(255,255,255,0.08)',
+                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' } 
+                                }}>
+                                    {/* Course Column */}
+                                    <Box sx={{ width: '20%', display: 'flex', alignItems: 'center' }}>
+                                        <Chip
+                                            label={task.subject || 'No Subject'}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: subjectColors[task.subject] || subjectColors.Default,
+                                                color: '#fff',
+                                                fontWeight: 700,
+                                                borderRadius: 1,
+                                            }}
+                                        />
+                                    </Box>
+                                    
+                                    {/* Task Name Column */}
+                                    <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                                        <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority), mr: 1 }} />
+                                        <Box>
+                                            <Typography sx={{ 
+                                                fontWeight: 500, 
+                                                textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+                                                color: '#fff'
+                                            }}>{task.title}</Typography>
+                                            {task.description && <Typography sx={{ color: '#e3f2fd', fontSize: 13, opacity: 0.8 }}>{task.description}</Typography>}
+                                        </Box>
+                                    </Box>
+                                    
+                                    {/* Category Column */}
+                                    <Box sx={{ width: '12%', display: 'flex', alignItems: 'center' }}>
                                         <Typography sx={{ 
-                                            fontWeight: 500, 
-                                            textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-                                            color: '#fff'
-                                        }}>{task.title}</Typography>
-                                        {task.description && <Typography sx={{ color: '#e3f2fd', fontSize: 13, opacity: 0.8 }}>{task.description}</Typography>}
+                                            color: '#e3f2fd', 
+                                            fontWeight: 500,
+                                            textTransform: 'capitalize',
+                                            fontSize: 14
+                                        }}>
+                                            {task.taskType || 'N/A'}
+                                        </Typography>
+                                    </Box>
+                                    
+                                    {/* Due Date Column */}
+                                    <Box sx={{ width: '12%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                                        <Typography sx={{ color: '#e3f2fd', fontWeight: 500, fontSize: 13, textAlign: 'center' }}>{getTaskDate(task.dueDate)}</Typography>
+                                        {task.dueDate && task.dueDate.includes('T') && (
+                                            <Typography sx={{ color: '#e3f2fd', fontWeight: 400, fontSize: 11, opacity: 0.8, textAlign: 'center' }}>
+                                                {getTaskTime(task.dueDate)}
+                                            </Typography>
+                                        )}
                                     </Box>
                                 </Box>
-                                
-                                {/* Category Column */}
-                                <Box sx={{ width: '12%', display: 'flex', alignItems: 'center' }}>
-                                    <Typography sx={{ 
-                                        color: '#e3f2fd', 
-                                        fontWeight: 500,
-                                        textTransform: 'capitalize',
-                                        fontSize: 14
-                                    }}>
-                                        {task.taskType || 'N/A'}
-                                    </Typography>
-                                </Box>
-                                
-                                {/* Due Date Column */}
-                                <Box sx={{ width: '12%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                                    <Typography sx={{ color: '#e3f2fd', fontWeight: 500, fontSize: 13, textAlign: 'center' }}>{getTaskDate(task.dueDate)}</Typography>
-                                    {task.dueDate && task.dueDate.includes('T') && (
-                                        <Typography sx={{ color: '#e3f2fd', fontWeight: 400, fontSize: 11, opacity: 0.8, textAlign: 'center' }}>
-                                            {getTaskTime(task.dueDate)}
-                                        </Typography>
-                                    )}
-                                </Box>
-                            </Box>
-                        ))
-                    )}
-                </Box>
-            </Paper>
+                            ))
+                        )}
+                    </Box>
+                </Paper>
+            </Box>
 
             {/* Upcoming Tasks */}
-            <Paper
-                sx={{
-                    width: { xs: '100%', md: 2000 },
-                    minHeight: 200,
-                    maxWidth: '82%',
-                    mx: 0,
-                    my: 3,
-                    p: 3,
-                    borderRadius: 5,
-                    boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    background: 'none',
-                    color: '#fff',
-                    border: '1.5px solid rgba(255,255,255,0.12)',
-                    backdropFilter: 'blur(12px)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                }}
-            >
-                {/* Glassy Overlay */}
-                <Box
+            <Box sx={{ position: 'relative', zIndex: 1, p: 3, background: 'transparent' }}>
+                <Paper
                     sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        bgcolor: 'rgba(17,25,40,0.55)',
-                        zIndex: 2,
+                        width: '1230px',
+                        minHeight: 200,
+                        mx: 0,
+                        my: 3,
+                        p: 3,
                         borderRadius: 5,
-                        pointerEvents: 'none',
+                        boxShadow: '0 8px 32px 0 rgba(31,38,135,0.18)',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        background: 'none',
+                        color: '#fff',
+                        border: '1.5px solid rgba(255,255,255,0.12)',
+                        backdropFilter: 'blur(12px)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
                     }}
-                />
-                <Box sx={{ position: 'relative', zIndex: 3 }}>
-                    <Typography
+                >
+                    {/* Glassy Overlay */}
+                    <Box
                         sx={{
-                            fontWeight: 600,
-                            opacity: 0.9,
-                            fontSize: 18,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            color: '#fff',
-                            mb: 2,
-                            textAlign: 'left',
-                            justifyContent: 'flex-start',
-                            pl: 0,
+                            position: 'absolute',
+                            inset: 0,
+                            bgcolor: 'rgba(17,25,40,0.55)',
+                            zIndex: 2,
+                            borderRadius: 5,
+                            pointerEvents: 'none',
                         }}
-                    >
-                        Upcoming tasks
-                    </Typography>
-                    
-                    {/* Column Headers */}
-                    {upcomingTasks.length > 0 && (
-                        <Box sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            mb: 2, 
-                            p: 2, 
-                            borderRadius: 2, 
-                            bgcolor: 'rgba(255,255,255,0.12)',
-                            borderBottom: '1px solid rgba(255,255,255,0.2)'
-                        }}>
-                            <Typography sx={{ 
-                                fontWeight: 600, 
-                                color: '#e3f2fd', 
-                                width: '20%',
-                                fontSize: 14
-                            }}>
-                                Course
-                            </Typography>
-                            <Typography sx={{ 
-                                fontWeight: 600, 
-                                color: '#e3f2fd', 
-                                flexGrow: 1,
-                                fontSize: 14,
-                                pl: 6
-                            }}>
-                                Task Name
-                            </Typography>
-                            <Typography sx={{ 
-                                fontWeight: 600, 
-                                color: '#e3f2fd', 
-                                width: '12%',
-                                fontSize: 14
-                            }}>
-                                Category
-                            </Typography>
-                            <Typography sx={{ 
-                                fontWeight: 600, 
-                                color: '#e3f2fd', 
-                                width: '12%',
-                                textAlign: 'center',
-                                fontSize: 14
-                            }}>
-                                Due Date
-                            </Typography>
-                        </Box>
-                    )}
-                    
-                    {upcomingTasks.length === 0 ? (
-                        <Typography sx={{ color: '#e3f2fd', opacity: 0.8, pl: 0 }}>No upcoming tasks.</Typography>
-                    ) : (
-                        upcomingTasks.map(task => (
-                            <Box key={task._id} sx={{ 
+                    />
+                    <Box sx={{ position: 'relative', zIndex: 3 }}>
+                        <Typography
+                            sx={{
+                                fontWeight: 600,
+                                opacity: 0.9,
+                                fontSize: 18,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                color: '#fff',
+                                mb: 2,
+                                textAlign: 'left',
+                                justifyContent: 'flex-start',
+                                pl: 0,
+                            }}
+                        >
+                            Upcoming tasks
+                        </Typography>
+                        
+                        {/* Column Headers */}
+                        {upcomingTasks.length > 0 && (
+                            <Box sx={{ 
                                 display: 'flex', 
                                 alignItems: 'center', 
-                                mb: 1, 
+                                mb: 2, 
                                 p: 2, 
                                 borderRadius: 2, 
-                                bgcolor: 'rgba(255,255,255,0.08)',
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' } 
+                                bgcolor: 'rgba(255,255,255,0.12)',
+                                borderBottom: '1px solid rgba(255,255,255,0.2)'
                             }}>
-                                {/* Course Column */}
-                                <Box sx={{ width: '20%', display: 'flex', alignItems: 'center' }}>
-                                    <Chip
-                                        label={task.subject || 'No Subject'}
-                                        size="small"
-                                        sx={{
-                                            bgcolor: subjectColors[task.subject] || subjectColors.Default,
-                                            color: '#fff',
-                                            fontWeight: 700,
-                                            borderRadius: 1,
-                                        }}
-                                    />
-                                </Box>
-                                
-                                {/* Task Name Column */}
-                                <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-                                    <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority), mr: 1 }} />
-                                    <Box>
+                                <Typography sx={{ 
+                                    fontWeight: 600, 
+                                    color: '#e3f2fd', 
+                                    width: '20%',
+                                    fontSize: 14
+                                }}>
+                                    Course
+                                </Typography>
+                                <Typography sx={{ 
+                                    fontWeight: 600, 
+                                    color: '#e3f2fd', 
+                                    flexGrow: 1,
+                                    fontSize: 14,
+                                    pl: 6
+                                }}>
+                                    Task Name
+                                </Typography>
+                                <Typography sx={{ 
+                                    fontWeight: 600, 
+                                    color: '#e3f2fd', 
+                                    width: '12%',
+                                    fontSize: 14
+                                }}>
+                                    Category
+                                </Typography>
+                                <Typography sx={{ 
+                                    fontWeight: 600, 
+                                    color: '#e3f2fd', 
+                                    width: '12%',
+                                    textAlign: 'center',
+                                    fontSize: 14
+                                }}>
+                                    Due Date
+                                </Typography>
+                            </Box>
+                        )}
+                        
+                        {upcomingTasks.length === 0 ? (
+                            <Typography sx={{ color: '#e3f2fd', opacity: 0.8, pl: 0 }}>No upcoming tasks.</Typography>
+                        ) : (
+                            upcomingTasks.map(task => (
+                                <Box key={task._id} sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    mb: 1, 
+                                    p: 2, 
+                                    borderRadius: 2, 
+                                    bgcolor: 'rgba(255,255,255,0.08)',
+                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' } 
+                                }}>
+                                    {/* Course Column */}
+                                    <Box sx={{ width: '20%', display: 'flex', alignItems: 'center' }}>
+                                        <Chip
+                                            label={task.subject || 'No Subject'}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: subjectColors[task.subject] || subjectColors.Default,
+                                                color: '#fff',
+                                                fontWeight: 700,
+                                                borderRadius: 1,
+                                            }}
+                                        />
+                                    </Box>
+                                    
+                                    {/* Task Name Column */}
+                                    <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                                        <Checkbox checked={task.status === 'completed'} onChange={() => handleComplete(task)} sx={{ color: getCheckboxColor(task.priority), mr: 1 }} />
+                                        <Box>
+                                            <Typography sx={{ 
+                                                fontWeight: 500, 
+                                                textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+                                                color: '#fff'
+                                            }}>{task.title}</Typography>
+                                            {task.description && <Typography sx={{ color: '#e3f2fd', fontSize: 13, opacity: 0.8 }}>{task.description}</Typography>}
+                                        </Box>
+                                    </Box>
+                                    
+                                    {/* Category Column */}
+                                    <Box sx={{ width: '12%', display: 'flex', alignItems: 'center' }}>
                                         <Typography sx={{ 
-                                            fontWeight: 500, 
-                                            textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-                                            color: '#fff'
-                                        }}>{task.title}</Typography>
-                                        {task.description && <Typography sx={{ color: '#e3f2fd', fontSize: 13, opacity: 0.8 }}>{task.description}</Typography>}
+                                            color: '#e3f2fd', 
+                                            fontWeight: 500,
+                                            textTransform: 'capitalize',
+                                            fontSize: 14
+                                        }}>
+                                            {task.taskType || 'N/A'}
+                                        </Typography>
+                                    </Box>
+                                    
+                                    {/* Due Date Column */}
+                                    <Box sx={{ width: '12%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                                        <Typography sx={{ color: '#e3f2fd', fontWeight: 500, fontSize: 13, textAlign: 'center' }}>{getTaskDate(task.dueDate)}</Typography>
+                                        {task.dueDate && task.dueDate.includes('T') && (
+                                            <Typography sx={{ color: '#e3f2fd', fontWeight: 400, fontSize: 11, opacity: 0.8, textAlign: 'center' }}>
+                                                {getTaskTime(task.dueDate)}
+                                            </Typography>
+                                        )}
                                     </Box>
                                 </Box>
-                                
-                                {/* Category Column */}
-                                <Box sx={{ width: '12%', display: 'flex', alignItems: 'center' }}>
-                                    <Typography sx={{ 
-                                        color: '#e3f2fd', 
-                                        fontWeight: 500,
-                                        textTransform: 'capitalize',
-                                        fontSize: 14
-                                    }}>
-                                        {task.taskType || 'N/A'}
-                                    </Typography>
-                                </Box>
-                                
-                                {/* Due Date Column */}
-                                <Box sx={{ width: '12%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                                    <Typography sx={{ color: '#e3f2fd', fontWeight: 500, fontSize: 13, textAlign: 'center' }}>{getTaskDate(task.dueDate)}</Typography>
-                                    {task.dueDate && task.dueDate.includes('T') && (
-                                        <Typography sx={{ color: '#e3f2fd', fontWeight: 400, fontSize: 11, opacity: 0.8, textAlign: 'center' }}>
-                                            {getTaskTime(task.dueDate)}
-                                        </Typography>
-                                    )}
-                                </Box>
-                            </Box>
-                        ))
-                    )}
-                </Box>
-            </Paper>
+                            ))
+                        )}
+                    </Box>
+                </Paper>
+            </Box>
 
             {/* Edit Dialog */}
             <Dialog open={editDialogOpen} onClose={closeEditDialog} maxWidth="sm" fullWidth>
@@ -1975,6 +2060,107 @@ const Dashboard: React.FC = () => {
                     <Button onClick={handleEditSave} variant="contained">Save</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Account Settings Dialog */}
+            <AccountSettings 
+                open={accountDialogOpen} 
+                onClose={handleAccountDialogClose} 
+            />
+
+            {/* Floating Leaderboard Icon */}
+            <Box
+                sx={{
+                    position: 'fixed',
+                    bottom: 24,
+                    right: 24,
+                    zIndex: 1000,
+                }}
+            >
+                <IconButton
+                    onClick={handleLeaderboardClick}
+                    sx={{
+                        width: 56,
+                        height: 56,
+                        backgroundColor: 'rgba(33, 150, 243, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        border: '2px solid rgba(255, 255, 255, 0.2)',
+                        boxShadow: '0 8px 32px rgba(33, 150, 243, 0.3)',
+                        color: '#fff',
+                        '&:hover': {
+                            backgroundColor: 'rgba(33, 150, 243, 1)',
+                            transform: 'scale(1.05)',
+                            boxShadow: '0 12px 40px rgba(33, 150, 243, 0.4)',
+                        },
+                        transition: 'all 0.3s ease',
+                    }}
+                >
+                    <LeaderboardIcon sx={{ fontSize: 28 }} />
+                </IconButton>
+            </Box>
+
+            {/* Floating Leaderboard Card */}
+            <Menu
+                anchorEl={leaderboardAnchorEl}
+                open={Boolean(leaderboardAnchorEl)}
+                onClose={handleLeaderboardClose}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+                PaperProps={{
+                    sx: {
+                        width: 280,
+                        height: 400,
+                        bgcolor: 'transparent !important',
+                        boxShadow: 'none !important',
+                        overflow: 'visible',
+                        mt: -47,
+                        pt: 0,
+                        border: 'none',
+                        outline: 'none',
+                        '& .MuiMenu-paper': {
+                            bgcolor: 'transparent !important',
+                            boxShadow: 'none !important',
+                            border: 'none',
+                            outline: 'none',
+                        },
+                        '& .MuiMenu-list': {
+                            bgcolor: 'transparent !important',
+                            p: 0,
+                            border: 'none',
+                            outline: 'none',
+                        },
+                        '& .MuiPaper-root': {
+                            bgcolor: 'transparent !important',
+                            boxShadow: 'none !important',
+                            border: 'none',
+                            outline: 'none',
+                        }
+                    }
+                }}
+            >
+                <Box
+                    sx={{
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: 3,
+                        overflow: 'hidden',
+                        background: 'rgba(17,25,40,0.85)',
+                        backdropFilter: 'blur(15px)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                        display: 'flex',
+                        alignItems: 'stretch',
+                    }}
+                >
+                    <Leaderboard users={leaderboardUsers} currentUserName={user?.name || ''} />
+                </Box>
+            </Menu>
         </Box>
     );
 };

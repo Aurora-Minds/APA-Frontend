@@ -94,6 +94,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     const logout = () => {
+        // Clear user-specific notification data
+        if (user) {
+            const userNotificationsKey = `notifications_${user._id}`;
+            localStorage.removeItem(userNotificationsKey);
+        }
+        
         localStorage.removeItem('token');
         setUser(null);
         setIsAuthenticated(false);

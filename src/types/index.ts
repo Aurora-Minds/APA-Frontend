@@ -4,6 +4,8 @@ export interface User {
   email: string;
   theme?: 'light' | 'dark' | 'system';
   xp?: number;
+  level?: number;
+  experience?: number;
   // GitHub OAuth fields
   githubId?: string;
   githubUsername?: string;
