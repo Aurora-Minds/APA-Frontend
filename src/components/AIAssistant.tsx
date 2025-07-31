@@ -3,6 +3,8 @@ import { Box, Typography, Paper, TextField, Button, List, ListItem, ListItemText
 import { Send as SendIcon, Attachment as AttachmentIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -138,7 +140,13 @@ const AIAssistant: React.FC = () => {
                                     {msg.role}
                                 </Typography>
                                 <Paper sx={{ p: 1.5, display: 'inline-block', bgcolor: msg.role === 'user' ? 'primary.main' : 'background.paper', color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary' }}>
-                                    <Typography>{msg.content}</Typography>
+                                    {msg.role === 'assistant' ? (
+                                        <Box sx={{ whiteSpace: 'pre-wrap' }}>
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                                        </Box>
+                                    ) : (
+                                        <Typography>{msg.content}</Typography>
+                                    )}
                                 </Paper>
                             </Box>
                         ))
