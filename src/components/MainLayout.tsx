@@ -20,7 +20,10 @@ import { useColorMode } from '../theme/ColorModeContext';
 import { useAuth } from '../context/AuthContext';
 import NotificationIcon from './NotificationIcon';
 
+import MenuIcon from '@mui/icons-material/Menu';
+
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isSidebarOpen, setSidebarOpen] = React.useState(true);
   const theme = useTheme();
   const mainBg = theme.palette.mode === 'dark'
     ? 'linear-gradient(135deg, #0f1535 0%, #1b254b 100%)'
@@ -63,12 +66,15 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const handleLogout = () => { setAvatarMenuAnchor(null); logout(); };
 
   return (
-    <Box sx={{ minHeight: '100vh', width: '100vw', background: mainBg, display: 'flex' }}>
-      <Sidebar />
+    <Box sx={{ minHeight: '100vh', width: '100%', background: mainBg, display: 'flex', overflow: 'hidden' }}>
+      <Sidebar isOpen={isSidebarOpen} />
       <Box sx={{ flex: 1, p: 0, minWidth: 0 }}>
         {/* Top bar: Breadcrumb/title and right icons in a single row */}
         <Box sx={{ px: 4, pt: 4, pb: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <IconButton onClick={() => setSidebarOpen(!isSidebarOpen)}>
+              <MenuIcon />
+            </IconButton>
             <Breadcrumbs separator="/" aria-label="breadcrumb" sx={{ color: theme.palette.text.secondary, fontSize: 15 }}>
               <HomeIcon sx={{ fontSize: 18, mb: '-2px' }} />
               <span>{title}</span>

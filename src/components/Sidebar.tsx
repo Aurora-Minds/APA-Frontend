@@ -12,7 +12,13 @@ import PersonIcon from '@mui/icons-material/Person';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
-const Sidebar: React.FC = () => {
+import MenuIcon from '@mui/icons-material/Menu';
+
+interface SidebarProps {
+    isOpen: boolean;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     const location = useLocation();
     const theme = useTheme();
 
@@ -28,10 +34,14 @@ const Sidebar: React.FC = () => {
         <Drawer
             variant="permanent"
             sx={{
-                width: 280,
+                width: isOpen ? 280 : 80,
                 flexShrink: 0,
+                transition: theme.transitions.create('width', {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.enteringScreen,
+                }),
                 '& .MuiDrawer-paper': {
-                    width: 280,
+                    width: isOpen ? 280 : 80,
                     boxSizing: 'border-box',
                     borderRight: 'none',
                     borderTopLeftRadius: 0,
@@ -45,15 +55,50 @@ const Sidebar: React.FC = () => {
                     boxShadow: '2px 0 24px 0 rgba(44,48,74,0.18)', // subtle right shadow
                     background: 'none', // transparent
                     backdropFilter: 'none',
+                    overflowX: 'hidden',
+                    transition: theme.transitions.create('width', {
+                        easing: theme.transitions.easing.sharp,
+                        duration: theme.transitions.duration.enteringScreen,
+                    }),
                 },
             }}
         >
             <Box sx={{
-                p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center',
-                justifyContent: 'center', height: 'auto', my: 2, position: 'relative'
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: 'auto',
+                my: 2,
+                position: 'relative',
             }}>
-                <img src="/aurora-minds-logo.png" alt="Aurora Minds Logo" style={{ width: 90, height: 90, marginBottom: 16, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 24px 0 rgba(0,0,0,0.2)' }} />
-                <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: 1, color: theme.palette.text.primary }}>
+                <img
+                    src="/aurora-minds-logo.png"
+                    alt="Aurora Minds Logo"
+                    style={{
+                        width: isOpen ? 90 : 40,
+                        height: isOpen ? 90 : 40,
+                        marginBottom: isOpen ? 16 : 0,
+                        borderRadius: isOpen ? 18 : 12,
+                        objectFit: 'cover',
+                        boxShadow: '0 4px 24px 0 rgba(0,0,0,0.2)',
+                        transition: 'width 0.3s, height 0.3s, margin-bottom 0.3s, border-radius 0.3s',
+                    }}
+                />
+                <Typography
+                    variant="h6"
+                    sx={{
+                        fontWeight: 700,
+                        letterSpacing: 1,
+                        color: theme.palette.text.primary,
+                        whiteSpace: 'nowrap',
+                        opacity: isOpen ? 1 : 0,
+                        transition: 'opacity 0.2s, max-height 0.3s',
+                        maxHeight: isOpen ? '100px' : '0',
+                        overflow: 'hidden',
+                    }}
+                >
                     Aurora Minds
                 </Typography>
             </Box>
@@ -84,10 +129,11 @@ const Sidebar: React.FC = () => {
                                     color: 'rgba(255, 255, 255, 1)',
                                 },
                                 transition: 'all 0.2s',
+                                justifyContent: isOpen ? 'initial' : 'center',
                             }}
                         >
-                            <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>{item.icon}</ListItemIcon>
-                            <ListItemText primary={item.text} sx={{ color: 'inherit' }} />
+                            <ListItemIcon sx={{ color: 'inherit', minWidth: 36, justifyContent: 'center' }}>{item.icon}</ListItemIcon>
+                            <ListItemText primary={item.text} sx={{ color: 'inherit', opacity: isOpen ? 1 : 0, transition: 'opacity 0.3s', whiteSpace: 'nowrap' }} />
                         </ListItemButton>
                     </ListItem>
                 ))}
