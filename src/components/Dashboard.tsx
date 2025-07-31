@@ -71,7 +71,8 @@ import SubjectIcon from '@mui/icons-material/Subject';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import { notificationService } from '../services/notificationService';
-import AccountSettings from './AccountSettings';
+import ManageSubjectsDialog from './ManageSubjectsDialog';
+
 
 interface Task {
     _id: string;
@@ -647,7 +648,7 @@ const Dashboard: React.FC = () => {
       setFocusTaskId
     } = useTimer();
     const { addNotification } = useNotifications();
-    const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+    
     const [focusHistory, setFocusHistory] = useState<{ taskId: string, seconds: number, date: string }[]>([]);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [priorityAnchorEl, setPriorityAnchorEl] = useState<null | HTMLElement>(null);
@@ -662,6 +663,7 @@ const Dashboard: React.FC = () => {
     const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
     const [leaderboardUsers, setLeaderboardUsers] = useState<LeaderboardUser[]>([]);
     const [leaderboardAnchorEl, setLeaderboardAnchorEl] = useState<null | HTMLElement>(null);
+    const [manageSubjectsOpen, setManageSubjectsOpen] = useState(false);
 
     const navigate = useNavigate();
     const theme = useTheme();
@@ -1098,13 +1100,7 @@ const Dashboard: React.FC = () => {
     const handleAvatarMenuClose = () => {
         setAvatarMenuAnchor(null);
     };
-    const handleAccountSettings = () => {
-        setAvatarMenuAnchor(null);
-        setAccountDialogOpen(true);
-    };
-    const handleAccountDialogClose = () => {
-        setAccountDialogOpen(false);
-    };
+    
     const handleLogout = () => {
         setAvatarMenuAnchor(null);
         logout();
@@ -1644,13 +1640,20 @@ const Dashboard: React.FC = () => {
                             </MenuItem>
                         ))}
                         <Divider />
-                        <MenuItem onClick={() => setAccountDialogOpen(true)}>
+                        <MenuItem onClick={() => setManageSubjectsOpen(true)}>
                             <AddIcon sx={{ mr: 1 }} />
-                            Add New Subject
+                            Manage Subjects
                         </MenuItem>
                     </Menu>
 
-
+                    <ManageSubjectsDialog
+                        open={manageSubjectsOpen}
+                        onClose={() => setManageSubjectsOpen(false)}
+                        subjects={subjects}
+                        onAddSubject={handleAddSubject}
+                        onDeleteSubject={handleDeleteSubject}
+                        isSubjectInUse={isSubjectInUse}
+                    />
 
                 </Paper>
             </Box>
@@ -2061,11 +2064,7 @@ const Dashboard: React.FC = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Account Settings Dialog */}
-            <AccountSettings 
-                open={accountDialogOpen} 
-                onClose={handleAccountDialogClose} 
-            />
+            
 
             {/* Floating Leaderboard Icon */}
             <Box

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Paper, TextField, Button, List, ListItem, ListItemText, CircularProgress, IconButton } from '@mui/material';
-import { Send as SendIcon, Attachment as AttachmentIcon } from '@mui/icons-material';
+import { Box, Typography, Paper, TextField, Button, List, ListItem, ListItemText, CircularProgress, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Send as SendIcon, Attachment as AttachmentIcon, Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -20,6 +22,9 @@ const AIAssistant: React.FC = () => {
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
+    const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
     const { user } = useAuth();
     const chatHistoryRef = useRef<HTMLDivElement>(null);
 
@@ -48,13 +53,17 @@ const AIAssistant: React.FC = () => {
         setSelectedChat(chat);
     };
 
+    const handleStartNewChat = () => {
+        setSelectedChat(null);
+        setNewMessage('');
+    };
+
     const handleNewChat = async () => {
         if (!newMessage.trim()) return;
 
         setLoading(true);
         try {
             const res = await axios.post<Chat>(`${API_BASE_URL}/ai/chat`, {
-                title: newMessage.substring(0, 30),
                 message: newMessage
             });
             setChats([res.data, ...chats]);
@@ -117,14 +126,76 @@ const AIAssistant: React.FC = () => {
         }
     };
 
+    const openDeleteDialog = (chat: Chat) => {
+        setChatToDelete(chat);
+        setDeleteDialogOpen(true);
+    };
+
+    const closeDeleteDialog = () => {
+        setChatToDelete(null);
+        setDeleteDialogOpen(false);
+    };
+
+    const handleDeleteChat = async () => {
+        if (!chatToDelete) return;
+
+        try {
+            await axios.delete(`${API_BASE_URL}/ai/chat/${chatToDelete._id}`);
+            setChats(chats.filter(c => c._id !== chatToDelete._id));
+            if (selectedChat?._id === chatToDelete._id) {
+                setSelectedChat(null);
+            }
+            closeDeleteDialog();
+        } catch (err) {
+            console.error('Error deleting chat:', err);
+        }
+    };
+
+    const markdownComponents = {
+        p: (props: any) => <Typography {...props} paragraph />,
+        strong: (props: any) => <Typography component="strong" sx={{ fontWeight: 'bold' }} {...props} />,
+        li: (props: any) => <ListItem sx={{ display: 'list-item', pl: 2 }}><ListItemText primary={props.children} /></ListItem>,
+        ul: (props: any) => <List sx={{ listStyleType: 'disc', pl: 4 }} {...props} />,
+        ol: (props: any) => <List sx={{ listStyleType: 'decimal', pl: 4 }} {...props} />,
+    };
+
     return (
         <Box sx={{ display: 'flex', height: 'calc(100vh - 120px)' }}>
             <Paper sx={{ width: '30%', p: 2, overflowY: 'auto' }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>Chat History</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6">Chat History</Typography>
+                    <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<AddIcon />}
+                        onClick={handleStartNewChat}
+                    >
+                        New Chat
+                    </Button>
+                </Box>
                 <List>
                     {chats.map(chat => (
-                        <ListItem button key={chat._id} onClick={() => handleSelectChat(chat)} selected={selectedChat?._id === chat._id}>
-                            <ListItemText primary={chat.title} />
+                        <ListItem 
+                            button 
+                            key={chat._id} 
+                            onClick={() => handleSelectChat(chat)} 
+                            selected={selectedChat?._id === chat._id}
+                            onMouseEnter={() => setHoveredChatId(chat._id)}
+                            onMouseLeave={() => setHoveredChatId(null)}
+                        >
+                            <ListItemText 
+                                primary={chat.title} 
+                                sx={{
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                }}
+                            />
+                            {hoveredChatId === chat._id && (
+                                <IconButton edge="end" aria-label="delete" onClick={(e) => { e.stopPropagation(); openDeleteDialog(chat); }}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            )}
                         </ListItem>
                     ))}
                 </List>
@@ -138,7 +209,11 @@ const AIAssistant: React.FC = () => {
                                     {msg.role}
                                 </Typography>
                                 <Paper sx={{ p: 1.5, display: 'inline-block', bgcolor: msg.role === 'user' ? 'primary.main' : 'background.paper', color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary' }}>
-                                    <Typography>{msg.content}</Typography>
+                                    {msg.role === 'assistant' ? (
+                                        <ReactMarkdown components={markdownComponents} remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                                    ) : (
+                                        <Typography>{msg.content}</Typography>
+                                    )}
                                 </Paper>
                             </Box>
                         ))
@@ -178,6 +253,23 @@ const AIAssistant: React.FC = () => {
                     </Button>
                 </Box>
             </Box>
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={closeDeleteDialog}
+            >
+                <DialogTitle>Delete Chat</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this chat? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeDeleteDialog}>Cancel</Button>
+                    <Button onClick={handleDeleteChat} color="error">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
