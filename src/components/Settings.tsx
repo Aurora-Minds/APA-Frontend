@@ -6,17 +6,22 @@ import {
     Box,
     TextField,
     Button,
-    Alert
+    Alert,
+    Divider
 } from '@mui/material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 const Settings: React.FC = () => {
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const [name, setName] = useState(user?.name || '');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState(user?.email || '');
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleGoogleCalendarIntegration = async () => {
         try {
@@ -33,13 +38,38 @@ const Settings: React.FC = () => {
         e.preventDefault();
         setSuccess('');
         setError('');
+        setLoading(true);
+
         try {
             const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
-            await axios.put(`${API_BASE_URL}/users/me`, { name, password });
+            
+            // Validate passwords match if changing password
+            if (newPassword && newPassword !== confirmPassword) {
+                setError('New passwords do not match');
+                setLoading(false);
+                return;
+            }
+
+            const updateData: any = { name, email };
+            if (newPassword) {
+                updateData.currentPassword = currentPassword;
+                updateData.newPassword = newPassword;
+            }
+
+            await axios.put(`${API_BASE_URL}/users/me`, updateData);
             setSuccess('Account updated successfully!');
-            setPassword('');
+            
+            // Clear password fields
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+            
+            // Refresh user data
+            await refreshUser();
         } catch (err: any) {
             setError(err.response?.data?.msg || 'Error updating account');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -49,33 +79,76 @@ const Settings: React.FC = () => {
                 <Typography variant="h4" gutterBottom>
                     Settings
                 </Typography>
-                {success && <Alert severity="success">{success}</Alert>}
-                {error && <Alert severity="error">{error}</Alert>}
+                {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+                
                 <form onSubmit={handleSubmit}>
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" gutterBottom>Profile Information</Typography>
                         <TextField
                             label="Name"
                             value={name}
                             onChange={e => setName(e.target.value)}
                             fullWidth
+                            margin="normal"
+                            required
+                        />
+                        <TextField
+                            label="Email"
+                            type="email"
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            fullWidth
+                            margin="normal"
+                            required
                         />
                     </Box>
-                    <Box sx={{ mt: 2 }}>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" gutterBottom>Change Password</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Leave blank if you don't want to change your password
+                        </Typography>
+                        <TextField
+                            label="Current Password"
+                            type="password"
+                            value={currentPassword}
+                            onChange={e => setCurrentPassword(e.target.value)}
+                            fullWidth
+                            margin="normal"
+                        />
                         <TextField
                             label="New Password"
                             type="password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
+                            value={newPassword}
+                            onChange={e => setNewPassword(e.target.value)}
                             fullWidth
+                            margin="normal"
+                        />
+                        <TextField
+                            label="Confirm New Password"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={e => setConfirmPassword(e.target.value)}
+                            fullWidth
+                            margin="normal"
                         />
                     </Box>
-                    <Box sx={{ mt: 2 }}>
-                        <Button type="submit" variant="contained">
-                            Save Changes
-                        </Button>
-                    </Box>
+
+                    <Button 
+                        type="submit"
+                        variant="contained" 
+                        disabled={loading}
+                    >
+                        {loading ? 'Saving...' : 'Save Changes'}
+                    </Button>
                 </form>
-                <Box sx={{ mt: 4 }}>
+
+                <Divider sx={{ my: 4 }} />
+
+                <Box>
                     <Typography variant="h5" gutterBottom>
                         Integrations
                     </Typography>

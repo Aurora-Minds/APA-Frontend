@@ -57,9 +57,8 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setThemeMenuAnchor(null);
   }
   const handleSettings = () => {
-    // Keep menu open when Account Settings is clicked
-    // TODO: Add account settings functionality later
-    console.log('Account Settings clicked');
+    setAvatarMenuAnchor(null);
+    navigate('/settings');
   };
   const handleLogout = () => { setAvatarMenuAnchor(null); logout(); };
 
@@ -245,4 +244,4 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
-export default MainLayout; 
+export default MainLayout;
