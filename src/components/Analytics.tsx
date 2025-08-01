@@ -107,6 +107,8 @@ const Analytics: React.FC = () => {
       setInsights(insightsRes.data as ProductivityInsights);
       setStreak(streakRes.data as StreakData);
     } catch (err: any) {
+      console.error('Analytics fetch error:', err);
+      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.msg || 'Failed to fetch analytics');
     } finally {
       setLoading(false);
