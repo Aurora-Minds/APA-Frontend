@@ -789,7 +789,7 @@ const Dashboard: React.FC = () => {
             // Recalculate XP: +1 for every task, +10 for every completed task
             const allTasks = res.data;
             const completedCount = allTasks.filter(t => t.status === 'completed').length;
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error fetching tasks:', err);
         }
     };
@@ -798,7 +798,7 @@ const Dashboard: React.FC = () => {
         try {
             const res = await axios.get<LeaderboardUser[]>(`${API_BASE_URL}/leaderboard`);
             setLeaderboardUsers(res.data);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error fetching leaderboard:', err);
         }
     };
@@ -945,7 +945,7 @@ const Dashboard: React.FC = () => {
             setQuickAddPriority(null);
             setQuickAddTaskType(null);
             fetchTasks();
-        } catch (err) {
+        } catch (err: any) {
             console.error('Full error object:', err);
             console.error('Error response data:', err.response?.data);
             console.error('Error response status:', err.response?.status);
@@ -973,7 +973,7 @@ const Dashboard: React.FC = () => {
                 // Add notification for task completion
                 notificationService.addTaskCompletedNotification(task, addNotification);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error updating task:', err);
         }
     };
@@ -1004,7 +1004,7 @@ const Dashboard: React.FC = () => {
             await axios.put(`${API_BASE_URL}/tasks/${editTask._id}`, editForm);
             fetchTasks();
             closeEditDialog();
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error editing task:', err);
         }
     };
@@ -1031,7 +1031,7 @@ const Dashboard: React.FC = () => {
     // Filter and sort tasks
     const today = new Date();
     const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    const priorityOrder = { high: 0, medium: 1, low: 2, none: 3 };
     
     const todaysTasks = tasks
         .filter(task => {
