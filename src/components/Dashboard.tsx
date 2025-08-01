@@ -79,7 +79,7 @@ interface Task {
     title: string;
     description: string;
     dueDate: string;
-    priority: 'low' | 'medium' | 'high';
+    priority: 'low' | 'medium' | 'high' | 'none';
     status: 'pending' | 'in-progress' | 'completed';
     subject: string;
     taskType?: 'lab' | 'assignment' | 'project';
