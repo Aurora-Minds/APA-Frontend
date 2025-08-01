@@ -906,9 +906,11 @@ const Dashboard: React.FC = () => {
             reported: quickAddReported,
             assignee: quickAddAssignee,
             dueDate,
-            priority: quickAddPriority,
+            priority: quickAddPriority || 'medium', // Default to medium if null
             status: 'pending',
         };
+        
+        console.log('Data being sent to backend:', dataToSend);
         try {
             const response = await axios.post<Task>(`${API_BASE_URL}/tasks`, dataToSend);
             const newTask = response.data;
