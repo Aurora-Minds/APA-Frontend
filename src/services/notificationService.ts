@@ -2,7 +2,7 @@ import { useNotifications } from '../context/NotificationContext';
 import { User } from '../types';
 
 // API base URL - you'll need to import this from your config
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
 
 export interface Task {
   _id: string;
