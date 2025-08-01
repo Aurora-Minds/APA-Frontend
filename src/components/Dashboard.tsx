@@ -946,10 +946,16 @@ const Dashboard: React.FC = () => {
             setQuickAddTaskType(null);
             fetchTasks();
         } catch (err) {
+            console.error('Full error object:', err);
+            console.error('Error response data:', err.response?.data);
+            console.error('Error response status:', err.response?.status);
+            
             if (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'errors' in err.response.data && Array.isArray(err.response.data.errors)) {
                 const messages = err.response.data.errors.map((e: any) => e.msg).join('\n');
                 alert('Validation error(s):\n' + messages);
                 console.error('Validation errors:', err.response.data.errors);
+            } else {
+                alert('Error creating task. Check console for details.');
             }
             console.error('Error adding task:', err);
         }
