@@ -131,7 +131,6 @@ const AllTasks: React.FC = () => {
         try {
             const isCompleting = task.status !== 'completed';
             await axios.put(`${API_BASE_URL}/tasks/${task._id}`, {
-                ...task,
                 status: isCompleting ? 'completed' : 'pending',
             });
             fetchTasks();
@@ -140,8 +139,10 @@ const AllTasks: React.FC = () => {
                 // Add notification for task completion
                 notificationService.addTaskCompletedNotification(task, addNotification);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error updating task:', err);
+            console.error('Error response:', err.response?.data);
+            console.error('Task being updated:', task);
         }
     };
 
@@ -173,8 +174,10 @@ const AllTasks: React.FC = () => {
             await axios.put(`${API_BASE_URL}/tasks/${editTask._id}`, editForm);
             fetchTasks();
             closeEditDialog();
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error editing task:', err);
+            console.error('Error response:', err.response?.data);
+            console.error('Edit form data:', editForm);
         }
     };
 
