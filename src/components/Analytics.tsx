@@ -34,6 +34,9 @@ interface FocusSummary {
     avgSessionLength: number;
     productivityScore: number;
     consistencyScore: number;
+    completedTasks: number;
+    totalTasks: number;
+    taskCompletionRate: number;
   };
   dailyBreakdown: Array<{
     date: string;
@@ -216,6 +219,23 @@ const Analytics: React.FC = () => {
                   </Box>
                   <Typography variant="h4" sx={{ fontWeight: 600 }}>
                     {focusSummary.summary.consistencyScore}%
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={3}>
+              <Card>
+                <CardContent>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <CheckCircle sx={{ mr: 1, color: 'success.main' }} />
+                    <Typography variant="h6">Task Completion</Typography>
+                  </Box>
+                  <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                    {focusSummary.summary.taskCompletionRate}%
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {focusSummary.summary.completedTasks}/{focusSummary.summary.totalTasks} tasks
                   </Typography>
                 </CardContent>
               </Card>

@@ -55,7 +55,11 @@ const EmailSettings: React.FC = () => {
       setPreferences((preferencesRes.data as any).preferences);
       setUserEmail({ email: (userRes.data as any).email || '' });
     } catch (error: any) {
-      setMessage({ type: 'error', text: 'Failed to load email preferences' });
+      console.error('Error loading email preferences:', error);
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.msg || 'Failed to load email preferences' 
+      });
     } finally {
       setLoading(false);
     }
