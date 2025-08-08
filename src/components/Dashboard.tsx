@@ -848,11 +848,13 @@ const Dashboard: React.FC = () => {
         
         // Add time to the due date if it's set
         if (quickAddTime) {
-            dueDate = new Date(`${dueDate}T${quickAddTime}:00`).toISOString();
+            dueDate = `${dueDate}T${quickAddTime}:00.000Z`;
         } else {
-            dueDate = new Date(dueDate).toISOString();
+            dueDate = `${dueDate}T00:00:00.000Z`;
         }
         
+        const localDateTime = `${quickAddDate}T${quickAddTime || '00:00'}`;
+
         const dataToSend = {
             title: quickAddTitle,
             subject: quickAddSubject,
@@ -860,7 +862,7 @@ const Dashboard: React.FC = () => {
             taskType: quickAddTaskType,
             reported: quickAddReported,
             assignee: quickAddAssignee,
-            dueDate,
+            dueDate: new Date(localDateTime).toISOString(),
             priority: quickAddPriority || 'medium', // Default to medium if null
             status: 'pending',
         };
@@ -991,16 +993,10 @@ const Dashboard: React.FC = () => {
     const todaysTasks = tasks
         .filter(task => {
             if (!task.dueDate || task.status === 'completed') return false;
-            // Extract just the date part from the due date
-            let taskDateStr;
-            if (task.dueDate.includes('T')) {
-                // New format: "2025-07-23T11:00:00.000Z" -> extract "2025-07-23"
-                taskDateStr = task.dueDate.split('T')[0];
-            } else {
-                // Old format: "2025-07-23"
-                taskDateStr = task.dueDate;
-            }
-            return taskDateStr === todayStr;
+            const taskDate = new Date(task.dueDate);
+            return taskDate.getFullYear() === today.getFullYear() &&
+                   taskDate.getMonth() === today.getMonth() &&
+                   taskDate.getDate() === today.getDate();
         })
         .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
     
@@ -1481,16 +1477,16 @@ const Dashboard: React.FC = () => {
                             <DateTimePickerMenu
                                 value={quickAddDate + (quickAddTime ? 'T' + quickAddTime : '')}
                                 onChange={(value) => {
-                                    if (value) {
-                                        try {
-                                            const date = new Date(value);
-                                            if (!isNaN(date.getTime())) {
-                                                setQuickAddDate(date.toISOString().split('T')[0]);
-                                                setQuickAddTime(date.toTimeString().slice(0, 5));
-                                            }
-                                        } catch (error) {
-                                            console.log('Invalid date value:', value);
-                                        }
+                                    if (value && value.includes('T')) {
+                                        const [datePart, timePart] = value.split('T');
+                                        setQuickAddDate(datePart);
+                                        setQuickAddTime(timePart);
+                                    } else if (value) {
+                                        setQuickAddDate(value);
+                                        setQuickAddTime('');
+                                    } else {
+                                        setQuickAddDate('');
+                                        setQuickAddTime('');
                                     }
                                 }}
                                 sx={{ 
