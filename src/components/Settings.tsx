@@ -146,22 +146,7 @@ const Settings: React.FC = () => {
                     </Button>
                 </form>
 
-                <Divider sx={{ my: 4 }} />
-
-                <Box>
-                    <Typography variant="h5" gutterBottom>
-                        Integrations
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        onClick={handleGoogleCalendarIntegration}
-                    >
-                        Integrate with Google Calendar
-                    </Button>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        This feature will add the tasks you create to your Google Calendar, including details like due date and time.
-                    </Typography>
-                </Box>
+                
             </Paper>
         </Container>
     );

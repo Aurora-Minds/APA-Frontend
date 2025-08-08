@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Paper, TextField, Button, List, ListItem, ListItemText, CircularProgress, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
-import { Send as SendIcon, Attachment as AttachmentIcon, Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Box, Typography, Paper, TextField, Button, List, ListItem, ListItemText, CircularProgress, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Chip } from '@mui/material';
+import { Send as SendIcon, Attachment as AttachmentIcon, Add as AddIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import ReactMarkdown from 'react-markdown';
@@ -9,6 +9,9 @@ import remarkGfm from 'remark-gfm';
 interface Message {
     role: 'user' | 'assistant';
     content: string;
+    attachment?: {
+        filename: string;
+    };
 }
 
 interface Chat {
@@ -21,6 +24,7 @@ const AIAssistant: React.FC = () => {
     const [chats, setChats] = useState<Chat[]>([]);
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
     const [newMessage, setNewMessage] = useState('');
+    const [attachedFile, setAttachedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
@@ -56,69 +60,50 @@ const AIAssistant: React.FC = () => {
     const handleStartNewChat = () => {
         setSelectedChat(null);
         setNewMessage('');
+        setAttachedFile(null);
     };
 
-    const handleNewChat = async () => {
-        if (!newMessage.trim()) return;
-
-        setLoading(true);
-        try {
-            const res = await axios.post<Chat>(`${API_BASE_URL}/ai/chat`, {
-                message: newMessage
-            });
-            setChats([res.data, ...chats]);
-            setSelectedChat(res.data);
-            setNewMessage('');
-        } catch (err) {
-            console.error('Error creating new chat:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file) return;
-
-        setLoading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-        if (selectedChat) {
-            formData.append('chatId', selectedChat._id);
+        if (file) {
+            setAttachedFile(file);
         }
+    };
 
-        try {
-            const res = await axios.post<Chat>(`${API_BASE_URL}/ai/chat/upload`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            if (selectedChat) {
-                setSelectedChat(res.data);
-                setChats(chats.map(c => c._id === res.data._id ? res.data : c));
-            } else {
-                setChats([res.data, ...chats]);
-                setSelectedChat(res.data);
-            }
-        } catch (err) {
-            console.error('Error uploading file:', err);
-        } finally {
-            setLoading(false);
-        }
+    const handleRemoveAttachment = () => {
+        setAttachedFile(null);
     };
 
     const handleSendMessage = async () => {
-        if (!newMessage.trim() || !selectedChat) return;
+        if (!newMessage.trim() && !attachedFile) return;
 
         setLoading(true);
+        const formData = new FormData();
+        formData.append('message', newMessage);
+        if (attachedFile) {
+            formData.append('file', attachedFile);
+        }
+
         try {
-            const res = await axios.post<Chat>(`${API_BASE_URL}/ai/chat/${selectedChat._id}`, {
-                message: newMessage
-            });
-            setSelectedChat(res.data);
+            if (selectedChat) {
+                const res = await axios.post<Chat>(`${API_BASE_URL}/ai/chat/${selectedChat._id}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                setSelectedChat(res.data);
+                setChats(chats.map(c => c._id === res.data._id ? res.data : c));
+            } else {
+                const res = await axios.post<Chat>(`${API_BASE_URL}/ai/chat`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                setChats([res.data, ...chats]);
+                setSelectedChat(res.data);
+            }
             setNewMessage('');
-            // Update the chat in the list
-            setChats(chats.map(c => c._id === res.data._id ? res.data : c));
+            setAttachedFile(null);
         } catch (err) {
             console.error('Error sending message:', err);
         } finally {
@@ -209,6 +194,13 @@ const AIAssistant: React.FC = () => {
                                     {msg.role}
                                 </Typography>
                                 <Paper sx={{ p: 1.5, display: 'inline-block', bgcolor: msg.role === 'user' ? 'primary.main' : 'background.paper', color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary' }}>
+                                    {msg.attachment && (
+                                        <Chip
+                                            icon={<AttachmentIcon />}
+                                            label={msg.attachment.filename}
+                                            sx={{ mb: 1 }}
+                                        />
+                                    )}
                                     {msg.role === 'assistant' ? (
                                         <ReactMarkdown components={markdownComponents} remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                                     ) : (
@@ -221,36 +213,48 @@ const AIAssistant: React.FC = () => {
                         <Typography>Select a chat or start a new one.</Typography>
                     )}
                 </Paper>
-                <Box sx={{ display: 'flex' }}>
-                    <TextField
-                        fullWidth
-                        variant="outlined"
-                        placeholder="Type your message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (selectedChat ? handleSendMessage() : handleNewChat())}
-                    />
-                    <input
-                        type="file"
-                        accept=".pdf"
-                        style={{ display: 'none' }}
-                        id="file-upload"
-                        onChange={handleFileUpload}
-                    />
-                    <label htmlFor="file-upload">
-                        <IconButton component="span" color="primary" disabled={loading}>
-                            <AttachmentIcon />
-                        </IconButton>
-                    </label>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={selectedChat ? handleSendMessage : handleNewChat}
-                        disabled={loading}
-                        sx={{ ml: 1 }}
-                    >
-                        {loading ? <CircularProgress size={24} /> : <SendIcon />}
-                    </Button>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                    {attachedFile && (
+                        <Box sx={{ mb: 1 }}>
+                            <Chip
+                                icon={<AttachmentIcon />}
+                                label={attachedFile.name}
+                                onDelete={handleRemoveAttachment}
+                                deleteIcon={<CloseIcon />}
+                            />
+                        </Box>
+                    )}
+                    <Box sx={{ display: 'flex' }}>
+                        <TextField
+                            fullWidth
+                            variant="outlined"
+                            placeholder="Type your message..."
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                        />
+                        <input
+                            type="file"
+                            accept=".pdf"
+                            style={{ display: 'none' }}
+                            id="file-upload"
+                            onChange={handleFileUpload}
+                        />
+                        <label htmlFor="file-upload">
+                            <IconButton component="span" color="primary" disabled={loading}>
+                                <AttachmentIcon />
+                            </IconButton>
+                        </label>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleSendMessage}
+                            disabled={loading}
+                            sx={{ ml: 1 }}
+                        >
+                            {loading ? <CircularProgress size={24} /> : <SendIcon />}
+                        </Button>
+                    </Box>
                 </Box>
             </Box>
             <Dialog
