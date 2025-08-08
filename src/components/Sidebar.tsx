@@ -28,7 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         { text: 'Focus Timer', icon: <TimerIcon />, path: '/focus-timer' },
         { text: 'Lab Assistant', icon: <ScienceIcon />, path: '/lab-assistant' },
         { text: 'Focus Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
-        { text: 'Email Settings', icon: <NotificationsIcon />, path: '/email-settings' },
+        { text: 'Notifications & Integrations', icon: <NotificationsIcon />, path: '/email-settings' },
     ];
     return (
         <Drawer

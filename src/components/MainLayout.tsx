@@ -42,7 +42,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     '/focus-timer': 'Focus Timer',
     '/lab-assistant': 'Lab Assistant',
     '/analytics': 'Focus Analytics',
-    '/email-settings': 'Email Settings',
+    '/email-settings': 'Notifications & Integrations',
     '/settings': 'Settings',
   };
   const title = pathMap[location.pathname] || 'Dashboard';
@@ -75,13 +75,10 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <IconButton onClick={() => setSidebarOpen(!isSidebarOpen)}>
               <MenuIcon />
             </IconButton>
-            <Breadcrumbs separator="/" aria-label="breadcrumb" sx={{ color: theme.palette.text.secondary, fontSize: 15 }}>
+            <Breadcrumbs separator="/" aria-label="breadcrumb" sx={{ color: theme.palette.text.secondary, fontSize: 16, fontWeight: 500 }}>
               <HomeIcon sx={{ fontSize: 18, mb: '-2px' }} />
               <span>{title}</span>
             </Breadcrumbs>
-            <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
-              {title}
-            </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             {/* Theme Settings Icon with Glassy Circle */}

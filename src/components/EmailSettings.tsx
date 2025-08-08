@@ -12,7 +12,7 @@ import {
   Divider,
   Grid
 } from '@mui/material';
-import { Email, Notifications, Schedule } from '@mui/icons-material';
+import { Email, Notifications, Schedule, CalendarToday } from '@mui/icons-material';
 import axios from 'axios';
 
 interface EmailPreferences {
@@ -38,7 +38,19 @@ const EmailSettings: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleGoogleCalendarIntegration = async () => {
+      try {
+          const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
+          const res = await axios.get<{ url: string }>(`${API_BASE_URL}/auth/google`);
+          window.location.href = res.data.url;
+      } catch (err) {
+          console.error('Error initiating Google Calendar integration:', err);
+          setError('Could not initiate Google Calendar integration.');
+      }
+  };
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
 
@@ -135,7 +147,7 @@ const EmailSettings: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
-        Email Notifications
+        Email Notification Settings
       </Typography>
 
       {message && (
@@ -274,6 +286,27 @@ const EmailSettings: React.FC = () => {
         </CardContent>
       </Card>
 
+      <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
+        Integrations
+      </Typography>
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box display="flex" alignItems="center" mb={2}>
+            <CalendarToday sx={{ mr: 1, color: 'primary.main' }} />
+            <Typography variant="h6">Google Calendar Integration</Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Integrate your Google Calendar to automatically sync your tasks and due dates.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={handleGoogleCalendarIntegration}
+          >
+            Integrate with Google Calendar
+          </Button>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 2 }}>
@@ -312,4 +345,4 @@ const EmailSettings: React.FC = () => {
   );
 };
 
-export default EmailSettings; 
+export default EmailSettings;
