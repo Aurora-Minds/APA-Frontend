@@ -654,9 +654,9 @@ const Dashboard: React.FC = () => {
     const [priorityAnchorEl, setPriorityAnchorEl] = useState<null | HTMLElement>(null);
     const [editPriorityAnchorEl, setEditPriorityAnchorEl] = useState<null | HTMLElement>(null);
     const [subjects, setSubjects] = useState<string[]>([]);
-    const [newSubject, setNewSubject] = useState('');
     const [subjectLoading, setSubjectLoading] = useState(false);
     const [subjectError, setSubjectError] = useState('');
+    const [newSubject, setNewSubject] = useState('');
     const [themeAnchorEl, setThemeAnchorEl] = useState<null | HTMLElement>(null);
     const { userPref, setTheme } = useColorMode();
     // Track completed tasks in this session to prevent double XP
@@ -724,61 +724,16 @@ const Dashboard: React.FC = () => {
             try {
                 setSubjectLoading(true);
                 const res = await axios.get(`${API_BASE_URL}/users/me/subjects`);
-                const userSubjects = (res.data as { subjects: string[] }).subjects || [];
-                
-                // Always include professional subjects alongside user's existing subjects
-                const professionalSubjects = [
-                    'Project Management',
-                    'Client Communication',
-                    'Research & Analysis',
-                    'Content Creation',
-                    'Data Analysis',
-                    'Strategic Planning',
-                    'Team Collaboration',
-                    'Financial Planning',
-                    'Marketing Strategy',
-                    'Product Development',
-                    'Customer Support',
-                    'Quality Assurance',
-                    'Business Development',
-                    'Operations Management',
-                    'Human Resources',
-                    'Legal & Compliance',
-                    'Technology & IT',
-                    'Sales & Revenue',
-                    'Risk Management',
-                    'Innovation & R&D'
-                ];
-                
-                // Combine user subjects with professional subjects, removing duplicates
-                const highSchoolSubjects = ['English', 'Math', 'Science', 'History'];
-                const filteredUserSubjects = userSubjects.filter(subject => !highSchoolSubjects.includes(subject));
-                const allSubjects = [...filteredUserSubjects, ...professionalSubjects].filter((subject, index, array) => 
-                    array.indexOf(subject) === index
-                );
-                setSubjects(allSubjects);
+                setSubjects((res.data as { subjects: string[] }).subjects || []);
+                setSubjectError('');
             } catch (err) {
                 setSubjectError('Failed to load subjects');
-                // Fallback to professional subjects if API fails
-                const fallbackSubjects = [
-                    'Project Management',
-                    'Client Communication',
-                    'Research & Analysis',
-                    'Content Creation',
-                    'Data Analysis',
-                    'Strategic Planning',
-                    'Team Collaboration',
-                    'Financial Planning',
-                    'Marketing Strategy',
-                    'Product Development'
-                ];
-                setSubjects(fallbackSubjects);
             } finally {
                 setSubjectLoading(false);
             }
         };
         fetchSubjects();
-    }, [API_BASE_URL]); // Add API_BASE_URL to dependencies
+    }, [API_BASE_URL]);
 
     const fetchTasks = async () => {
         try {
@@ -1189,11 +1144,11 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    const handleAddSubject = async () => {
-        if (!newSubject.trim()) return;
+    const handleAddSubject = async (subject: string) => {
+        if (!subject.trim()) return;
         try {
             setSubjectLoading(true);
-            const res = await axios.post(`${API_BASE_URL}/users/me/subjects`, { subject: newSubject.trim() });
+            const res = await axios.post(`${API_BASE_URL}/users/me/subjects`, { subject: subject.trim() });
             setSubjects((res.data as { subjects: string[] }).subjects);
             setNewSubject('');
             setSubjectError('');
@@ -2030,11 +1985,11 @@ const Dashboard: React.FC = () => {
                                 placeholder="Add subject"
                                 value={newSubject}
                                 onChange={e => setNewSubject(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') handleAddSubject(); }}
+                                onKeyDown={e => { if (e.key === 'Enter') handleAddSubject(newSubject); }}
                                 sx={{ flex: 1, mr: 1 }}
                                 disabled={subjectLoading}
                             />
-                            <Button onClick={handleAddSubject} disabled={subjectLoading || !newSubject.trim()} variant="contained">Add</Button>
+                            <Button onClick={() => handleAddSubject(newSubject)} disabled={subjectLoading || !newSubject.trim()} variant="contained">Add</Button>
                         </Box>
                         {subjectError && <Typography color="error" variant="caption">{subjectError}</Typography>}
                     </Box>
