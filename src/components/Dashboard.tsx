@@ -1248,46 +1248,7 @@ const Dashboard: React.FC = () => {
                         fullWidth
                     />
                 </Grid>
-                <Grid item xs={12} md={3} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Leaderboard users={leaderboardUsers} currentUserName={user?.name || ''} />
-                    
-                    {/* Email Reminders Widget */}
-                    <Paper
-                        sx={{
-                            p: 2,
-                            background: 'rgba(255,255,255,0.06)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: 3,
-                            height: 'fit-content'
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <NotificationsIcon sx={{ mr: 1, color: '#4318ff' }} />
-                            <Typography variant="h6" sx={{ fontWeight: 600, color: '#fff' }}>
-                                Email Reminders
-                            </Typography>
-                        </Box>
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 2 }}>
-                            Stay on top of your tasks with email notifications
-                        </Typography>
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => navigate('/email-settings')}
-                            sx={{
-                                color: '#4318ff',
-                                borderColor: '#4318ff',
-                                '&:hover': {
-                                    borderColor: '#fff',
-                                    color: '#fff'
-                                }
-                            }}
-                        >
-                            Configure
-                        </Button>
-                    </Paper>
-                </Grid>
+                
             </Grid>
         </Box>
 
