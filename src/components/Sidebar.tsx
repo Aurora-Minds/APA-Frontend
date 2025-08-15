@@ -26,7 +26,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     const mainMenu = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
         { text: 'Tasks', icon: <AssignmentIcon />, path: '/tasks' },
-        { text: 'Focus Timer', icon: <TimerIcon />, path: '/focus-timer' },
         { text: 'Lab Assistant', icon: <ScienceIcon />, path: '/lab-assistant' },
         { text: 'Focus Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
         { text: 'Rewards', icon: <EmojiEventsIcon />, path: '/rewards' },
