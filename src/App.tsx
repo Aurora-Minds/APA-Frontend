@@ -15,6 +15,7 @@ import AuthCallback from './components/AuthCallback';
 import Analytics from './components/Analytics';
 import EmailSettings from './components/EmailSettings';
 import Settings from './components/Settings';
+import Rewards from './components/Rewards';
 import { CircularProgress, Box, ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -113,6 +114,16 @@ const App: React.FC = () => {
             <PrivateRoute>
               <MainLayout>
                 <Analytics />
+              </MainLayout>
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/rewards" 
+          element={
+            <PrivateRoute>
+              <MainLayout>
+                <Rewards />
               </MainLayout>
             </PrivateRoute>
           } 
