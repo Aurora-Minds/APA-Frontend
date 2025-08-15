@@ -11,6 +11,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import PersonIcon from '@mui/icons-material/Person';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 import MenuIcon from '@mui/icons-material/Menu';
 
@@ -25,9 +26,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     const mainMenu = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
         { text: 'Tasks', icon: <AssignmentIcon />, path: '/tasks' },
-        { text: 'Focus Timer', icon: <TimerIcon />, path: '/focus-timer' },
         { text: 'Lab Assistant', icon: <ScienceIcon />, path: '/lab-assistant' },
         { text: 'Focus Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
+        { text: 'Rewards', icon: <EmojiEventsIcon />, path: '/rewards' },
         { text: 'Notifications & Integrations', icon: <NotificationsIcon />, path: '/email-settings' },
     ];
     return (

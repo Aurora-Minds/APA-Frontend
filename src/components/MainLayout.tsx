@@ -42,6 +42,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     '/focus-timer': 'Focus Timer',
     '/lab-assistant': 'Lab Assistant',
     '/analytics': 'Focus Analytics',
+    '/rewards': 'Rewards',
     '/email-settings': 'Notifications & Integrations',
     '/settings': 'Settings',
   };

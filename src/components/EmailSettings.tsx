@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { Email, Notifications, Schedule, CalendarToday } from '@mui/icons-material';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 interface EmailPreferences {
   taskReminders: boolean;
@@ -27,6 +28,7 @@ interface UserEmail {
 }
 
 const EmailSettings: React.FC = () => {
+  const { user } = useAuth();
   const [preferences, setPreferences] = useState<EmailPreferences>({
     taskReminders: true,
     dailyDigest: false,
@@ -38,6 +40,7 @@ const EmailSettings: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -50,6 +53,19 @@ const EmailSettings: React.FC = () => {
           console.error('Error initiating Google Calendar integration:', err);
           setError('Could not initiate Google Calendar integration.');
       }
+  };
+
+  const handleSyncAllTasks = async () => {
+    setSyncing(true);
+    setMessage(null);
+    try {
+        const res = await axios.post<{ msg: string }>(`${API_BASE_URL}/google-calendar/sync-all-tasks`);
+        setMessage({ type: 'success', text: res.data.msg });
+    } catch (err: any) {
+        setMessage({ type: 'error', text: err.response?.data?.msg || 'Failed to sync tasks.' });
+    } finally {
+        setSyncing(false);
+    }
   };
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.auroraminds.xyz/api';
@@ -298,12 +314,21 @@ const EmailSettings: React.FC = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Integrate your Google Calendar to automatically sync your tasks and due dates.
           </Typography>
-          <Button
-            variant="contained"
-            onClick={handleGoogleCalendarIntegration}
-          >
-            Integrate with Google Calendar
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleGoogleCalendarIntegration}
+            >
+              {user?.googleRefreshToken ? 'Reconnect Google Calendar' : 'Integrate with Google Calendar'}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleSyncAllTasks}
+              disabled={!user?.googleRefreshToken || syncing}
+            >
+              {syncing ? 'Syncing...' : 'Sync All Tasks'}
+            </Button>
+          </Box>
         </CardContent>
       </Card>
 
