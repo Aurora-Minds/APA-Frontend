@@ -11,6 +11,7 @@ export interface User {
   githubUsername?: string;
   githubAvatar?: string;
   provider?: 'local' | 'github';
+  googleRefreshToken?: string;
   // Add any other user properties here
 }
 
